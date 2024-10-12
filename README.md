@@ -1,21 +1,21 @@
-# This is my first full-stack app.
+## This is my first full-stack app.
 
-## Overview:
+### Overview:
 
-The front-end is build-on ReactJs
-The back-end is handled by using NodeJs/ ExpressJs
-The database is dealt with MongoDB
+* The front-end is build-on ReactJs
+* The back-end is handled by using NodeJs/ ExpressJs
+* The database is dealt with MongoDB
 
-## Frontend
+### Frontend
 
-Frond-end is deployed in netifly:
-Link to app:
+* Frond-end is deployed in netifly:
+* Link to app:
 
-The back-end app is deployed in Render:
-Link to backend nodejs app: https://jobs-api-03hd.onrender.com/
+### Backend
+* The back-end app is deployed in Render:
+* Link to backend nodejs app: https://jobs-api-03hd.onrender.com/
 
-## Backend
 
-Backened was tested using Postman.
-JsonWebToken was used for authentication.
-For GET request, API would be {url}/api/v1/jobs
+* Backened was tested using Postman.
+* JsonWebToken was used for authentication.
+* For GET request, API would be:  `{url}/api/v1/jobs`
