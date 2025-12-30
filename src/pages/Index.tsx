@@ -1,39 +1,39 @@
-import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { Briefcase, ArrowRight, CheckCircle2, Shield, Zap } from 'lucide-react';
+import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Briefcase, ArrowRight, CheckCircle2, Shield, Zap } from "lucide-react";
 
 const features = [
-  {
-    icon: Briefcase,
-    title: 'Track Applications',
-    description: 'Keep all your job applications organized in one place',
-  },
-  {
-    icon: Shield,
-    title: 'Secure & Private',
-    description: 'Your data is protected with industry-standard encryption',
-  },
-  {
-    icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Add, update, and manage jobs in seconds',
-  },
+	{
+		icon: Briefcase,
+		title: "Track Applications",
+		description: "Keep all your job applications organized in one place",
+	},
+	{
+		icon: Shield,
+		title: "Secure & Private",
+		description: "Your data is protected with industry-standard encryption",
+	},
+	{
+		icon: Zap,
+		title: "Lightning Fast",
+		description: "Add, update, and manage jobs in seconds",
+	},
 ];
 
 const Index = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+	const { isAuthenticated, isLoading } = useAuth();
+	const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+	useEffect(() => {
+		if (!isLoading && isAuthenticated) {
+			navigate("/dashboard");
+		}
+	}, [isAuthenticated, isLoading, navigate]);
 
-  return (
+	return (
 		<div className="min-h-screen flex flex-col relative overflow-hidden">
 			{/* Background effects */}
 			<div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
@@ -42,9 +42,7 @@ const Index = () => {
 			{/* Navbar */}
 			<nav className="relative z-10 flex items-center justify-between px-6 py-4 lg:px-12">
 				<div className="flex items-center gap-3">
-					<div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
-						<img src="/logo-icon.svg" alt="Logo" className="w-10 h-10" />
-					</div>
+					<img src="/logo-icon.svg" alt="Logo" className="w-12 h-12" />
 					<span className="font-bold text-xl tracking-tight">
 						Log<span className="text-primary">My</span>Jobs
 					</span>

@@ -43,9 +43,7 @@ export const Navbar = () => {
 				<div className="flex items-center justify-between h-16">
 					<div className="flex items-center gap-8">
 						<Link to="/dashboard" className="flex items-center gap-3">
-							<div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
-								<img src="/logo-icon.svg" alt="Logo" className="w-10 h-10" />
-							</div>
+							<img src="/logo-icon.svg" alt="Logo" className="w-10 h-10" />
 							<span className="font-bold text-xl tracking-tight">
 								Log<span className="text-primary">My</span>Jobs
 							</span>
