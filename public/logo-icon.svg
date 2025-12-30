@@ -1,0 +1,94 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="briefcaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5C6BC0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3949AB;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="targetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E88E5;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="chartGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#66BB6A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#43A047;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="3" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.25"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle for depth -->
+  <circle cx="100" cy="100" r="85" fill="#E8EAF6" opacity="0.5"/>
+  
+  <!-- Main briefcase body shadow -->
+  <rect x="52" y="82" width="96" height="70" rx="8" fill="#000000" opacity="0.15" filter="url(#shadow)"/>
+  
+  <!-- Main briefcase body -->
+  <rect x="50" y="80" width="96" height="70" rx="8" fill="url(#briefcaseGrad)" stroke="#1A237E" stroke-width="4"/>
+  
+  <!-- Briefcase handle -->
+  <path d="M 75 80 L 75 65 Q 75 55 85 55 L 115 55 Q 125 55 125 65 L 125 80" 
+        fill="none" stroke="#1A237E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 77 80 L 77 67 Q 77 59 85 59 L 115 59 Q 123 59 123 67 L 123 80" 
+        fill="none" stroke="#5C6BC0" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Briefcase lock/clasp -->
+  <rect x="95" y="105" width="10" height="25" rx="2" fill="#FFB74D" stroke="#F57C00" stroke-width="2"/>
+  <circle cx="100" cy="117" r="4" fill="#F57C00"/>
+  
+  <!-- Briefcase accent lines -->
+  <line x1="50" y1="105" x2="95" y2="105" stroke="#1A237E" stroke-width="2" opacity="0.3"/>
+  <line x1="105" y1="105" x2="146" y2="105" stroke="#1A237E" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Target/Goal icon (top right) -->
+  <circle cx="145" cy="55" r="28" fill="url(#targetGrad)" stroke="#0D47A1" stroke-width="3" filter="url(#shadow)"/>
+  <circle cx="145" cy="55" r="20" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
+  <circle cx="145" cy="55" r="12" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>
+  <circle cx="145" cy="55" r="5" fill="#FFFFFF" opacity="0.9"/>
+  
+  <!-- Progress chart bars (bottom left) -->
+  <g filter="url(#shadow)">
+    <!-- Bar 1 -->
+    <rect x="25" y="135" width="12" height="25" rx="2" fill="url(#chartGrad)" stroke="#2E7D32" stroke-width="2"/>
+    <!-- Bar 2 -->
+    <rect x="40" y="125" width="12" height="35" rx="2" fill="url(#chartGrad)" stroke="#2E7D32" stroke-width="2"/>
+    <!-- Bar 3 -->
+    <rect x="55" y="115" width="12" height="45" rx="2" fill="url(#chartGrad)" stroke="#2E7D32" stroke-width="2"/>
+  </g>
+  
+  <!-- Checkmark badge (top left) -->
+  <circle cx="55" cy="55" r="20" fill="#66BB6A" stroke="#43A047" stroke-width="3" filter="url(#shadow)"/>
+  <path d="M 45 55 L 52 62 L 65 48" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Small notification dots for active tracking -->
+  <circle cx="160" cy="120" r="8" fill="#FF5252" stroke="#FFFFFF" stroke-width="2" filter="url(#glow)"/>
+  <circle cx="160" cy="120" r="4" fill="#FFFFFF" opacity="0.5"/>
+  
+  <!-- Document lines on briefcase for detail -->
+  <line x1="65" y1="90" x2="90" y2="90" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  <line x1="65" y1="97" x2="135" y2="97" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  
+  <!-- Shine effect on briefcase -->
+  <ellipse cx="70" cy="90" rx="15" ry="10" fill="#FFFFFF" opacity="0.2"/>
+</svg>
