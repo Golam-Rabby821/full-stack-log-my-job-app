@@ -5,7 +5,6 @@ import {
   Bell,
   LayoutDashboard,
   LogOut,
-  Monitor,
   Moon,
   Settings,
   Sun,
@@ -25,7 +24,7 @@ import {
 export const CommandPalette = () => {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
-  const { setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export const CommandPalette = () => {
         <CommandGroup heading="Navigation">
           <CommandItem onSelect={() => runAction(() => navigate('/dashboard'))}>
             <LayoutDashboard className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+            <span>Pipeline</span>
           </CommandItem>
           <CommandItem onSelect={() => runAction(() => navigate('/analytics'))}>
             <BarChart3 className="mr-2 h-4 w-4" />
@@ -72,18 +71,19 @@ export const CommandPalette = () => {
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Theme">
-          <CommandItem onSelect={() => runAction(() => setTheme('light'))}>
-            <Sun className="mr-2 h-4 w-4" />
-            <span>Switch to Light Theme</span>
-          </CommandItem>
-          <CommandItem onSelect={() => runAction(() => setTheme('dark'))}>
-            <Moon className="mr-2 h-4 w-4" />
-            <span>Switch to Dark Theme</span>
-          </CommandItem>
-          <CommandItem onSelect={() => runAction(() => setTheme('system'))}>
-            <Monitor className="mr-2 h-4 w-4" />
-            <span>Use System Theme</span>
+        <CommandGroup heading="Appearance">
+          <CommandItem onSelect={() => runAction(toggleTheme)}>
+            {theme === 'dark' ? (
+              <>
+                <Sun className="mr-2 h-4 w-4" />
+                <span>Switch to Light Mode</span>
+              </>
+            ) : (
+              <>
+                <Moon className="mr-2 h-4 w-4" />
+                <span>Switch to Dark Mode</span>
+              </>
+            )}
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />

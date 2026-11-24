@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -32,6 +32,7 @@ import { CompanyAvatar } from '@/components/CompanyAvatar';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { JobModal } from '@/components/JobModal';
 import { Navbar } from '@/components/Navbar';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +50,7 @@ const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: jobData, isLoading, isError } = useJob(id);
+  const { data: jobData, isLoading, isError, error, refetch } = useJob(id);
   const { data: notesData } = useJobNotes(id);
   const { data: timelineData } = useJobTimeline(id);
 
@@ -66,13 +67,6 @@ const JobDetails = () => {
   const [reminderNote, setReminderNote] = useState('');
   const [showReminderForm, setShowReminderForm] = useState(false);
 
-  useEffect(() => {
-    if (isError) {
-      toast.error('Failed to fetch job details');
-      navigate('/dashboard');
-    }
-  }, [isError, navigate]);
-
   const job = jobData?.job;
   const notes = notesData?.notes ?? job?.notes ?? [];
   const timeline = timelineData?.timeline ?? job?.timeline ?? [];
@@ -83,9 +77,9 @@ const JobDetails = () => {
       await updateJobMutation.mutateAsync({ id: job._id, data });
       setIsEditModalOpen(false);
       toast.success('Job updated successfully!');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update job');
-      throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update job');
+      throw err;
     }
   };
 
@@ -95,8 +89,8 @@ const JobDetails = () => {
       await deleteJobMutation.mutateAsync(job._id);
       toast.success('Job deleted successfully!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete job');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete job');
     }
   };
 
@@ -151,10 +145,30 @@ const JobDetails = () => {
     );
   }
 
-  if (!job) {
+  if (isError || !job) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Job not found</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 pt-12 pb-14">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="mb-5 -ml-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+            Back to Pipeline
+          </Button>
+          <QueryErrorState
+            title={isError ? 'Unable to load application' : 'Application not found'}
+            message={
+              error instanceof Error
+                ? error.message
+                : 'This application may have been deleted or the link is invalid.'
+            }
+            onRetry={isError ? () => void refetch() : undefined}
+          />
+        </main>
       </div>
     );
   }
@@ -289,7 +303,7 @@ const JobDetails = () => {
                         href={job.jobUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-foreground underline underline-offset-4 hover:text-accent font-medium break-all"
+                        className="text-foreground underline underline-offset-4 hover:text-muted-foreground font-medium break-all"
                       >
                         {job.jobUrl}
                       </a>

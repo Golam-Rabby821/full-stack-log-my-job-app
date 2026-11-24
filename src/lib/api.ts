@@ -33,6 +33,14 @@ const getAuthHeaders = (): HeadersInit => {
   };
 };
 
+const safeFetch = async (input: string, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(input, init);
+  } catch {
+    throw new Error('Unable to reach the server. Please check your connection or try again.');
+  }
+};
+
 const parseErrorAndThrow = async (response: Response, skipAuthRedirect = false): Promise<never> => {
   const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
   if (response.status === 401 && !skipAuthRedirect && unauthorizedHandler) {
@@ -93,7 +101,7 @@ const buildQueryString = (filters: JobFilters): string => {
 // Auth endpoints
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -102,7 +110,7 @@ export const authApi = {
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -111,7 +119,7 @@ export const authApi = {
   },
 
   demoLogin: async (): Promise<AuthResponse> => {
-    const response = await fetch(`${API_BASE_URL}/auth/demo`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/demo`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -119,7 +127,7 @@ export const authApi = {
   },
 
   resetDemo: async (): Promise<{ msg: string }> => {
-    const response = await fetch(`${API_BASE_URL}/auth/demo/reset`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/demo/reset`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
@@ -127,14 +135,14 @@ export const authApi = {
   },
 
   getMe: async (): Promise<{ user: UserProfile }> => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/me`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<{ user: UserProfile }>(response);
   },
 
   updateProfile: async (data: UpdateProfileData): Promise<{ user: UserProfile; token: string }> => {
-    const response = await fetch(`${API_BASE_URL}/auth/update`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/update`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -143,7 +151,7 @@ export const authApi = {
   },
 
   changePassword: async (data: ChangePasswordData): Promise<{ msg: string }> => {
-    const response = await fetch(`${API_BASE_URL}/auth/password`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -152,7 +160,7 @@ export const authApi = {
   },
 
   deleteAccount: async (): Promise<{ msg: string }> => {
-    const response = await fetch(`${API_BASE_URL}/auth/delete`, {
+    const response = await safeFetch(`${API_BASE_URL}/auth/delete`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -164,21 +172,21 @@ export const authApi = {
 export const jobsApi = {
   getAll: async (filters: JobFilters = {}): Promise<JobsResponse> => {
     const queryString = buildQueryString(filters);
-    const response = await fetch(`${API_BASE_URL}/jobs${queryString}`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs${queryString}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<JobsResponse>(response);
   },
 
   getById: async (id: string): Promise<{ job: Job }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${id}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<{ job: Job }>(response);
   },
 
   create: async (data: CreateJobData): Promise<{ job: Job }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -187,7 +195,7 @@ export const jobsApi = {
   },
 
   update: async (id: string, data: UpdateJobData): Promise<{ job: Job }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -196,7 +204,7 @@ export const jobsApi = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -204,7 +212,7 @@ export const jobsApi = {
   },
 
   bulkDelete: async (ids: string[]): Promise<{ deletedCount: number }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/bulk-delete`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/bulk-delete`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids }),
@@ -216,7 +224,7 @@ export const jobsApi = {
     ids: string[],
     data: { status?: string; priority?: string }
   ): Promise<{ matchedCount: number; modifiedCount: number }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/bulk-update`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/bulk-update`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids, ...data }),
@@ -225,7 +233,7 @@ export const jobsApi = {
   },
 
   exportCsv: async (): Promise<Blob> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/export/csv`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/export/csv`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) {
@@ -235,7 +243,7 @@ export const jobsApi = {
   },
 
   exportPdf: async (): Promise<Blob> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/export/pdf`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/export/pdf`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) {
@@ -248,14 +256,14 @@ export const jobsApi = {
 // Notes endpoints
 export const notesApi = {
   getAll: async (jobId: string): Promise<{ notes: Note[] }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/notes`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/notes`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<{ notes: Note[] }>(response);
   },
 
   add: async (jobId: string, text: string): Promise<{ note: Note; notes: Note[] }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/notes`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/notes`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ text }),
@@ -264,7 +272,7 @@ export const notesApi = {
   },
 
   delete: async (jobId: string, noteId: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/notes/${noteId}`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/notes/${noteId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -275,7 +283,7 @@ export const notesApi = {
 // Timeline endpoints
 export const timelineApi = {
   getAll: async (jobId: string): Promise<{ timeline: TimelineEvent[] }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/timeline`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/timeline`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<{ timeline: TimelineEvent[] }>(response);
@@ -285,7 +293,7 @@ export const timelineApi = {
     jobId: string,
     data: { event: string; description?: string; date?: string }
   ): Promise<{ timeline: TimelineEvent[] }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/timeline`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/timeline`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -297,21 +305,21 @@ export const timelineApi = {
 // Analytics endpoints
 export const analyticsApi = {
   getOverview: async (): Promise<AnalyticsOverview> => {
-    const response = await fetch(`${API_BASE_URL}/analytics/overview`, {
+    const response = await safeFetch(`${API_BASE_URL}/analytics/overview`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<AnalyticsOverview>(response);
   },
 
   getTrends: async (): Promise<AnalyticsTrends> => {
-    const response = await fetch(`${API_BASE_URL}/analytics/trends`, {
+    const response = await safeFetch(`${API_BASE_URL}/analytics/trends`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<AnalyticsTrends>(response);
   },
 
   getMonthly: async (): Promise<AnalyticsMonthly> => {
-    const response = await fetch(`${API_BASE_URL}/analytics/monthly`, {
+    const response = await safeFetch(`${API_BASE_URL}/analytics/monthly`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<AnalyticsMonthly>(response);
@@ -322,14 +330,14 @@ export const analyticsApi = {
 export const remindersApi = {
   getAll: async (includePast: boolean = false): Promise<{ reminders: Reminder[] }> => {
     const query = includePast ? '?includePast=true' : '';
-    const response = await fetch(`${API_BASE_URL}/reminders${query}`, {
+    const response = await safeFetch(`${API_BASE_URL}/reminders${query}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse<{ reminders: Reminder[] }>(response);
   },
 
   create: async (jobId: string, data: CreateReminderData): Promise<{ reminder: Reminder }> => {
-    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/reminder`, {
+    const response = await safeFetch(`${API_BASE_URL}/jobs/${jobId}/reminder`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -338,7 +346,7 @@ export const remindersApi = {
   },
 
   update: async (reminderId: string, data: UpdateReminderData): Promise<{ reminder: Reminder }> => {
-    const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+    const response = await safeFetch(`${API_BASE_URL}/reminders/${reminderId}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -347,7 +355,7 @@ export const remindersApi = {
   },
 
   delete: async (reminderId: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+    const response = await safeFetch(`${API_BASE_URL}/reminders/${reminderId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

@@ -5,11 +5,11 @@ import {
   BarChart3,
   Bell,
   ChevronDown,
-  Command,
   LayoutDashboard,
   Loader2,
   LogOut,
   RotateCcw,
+  Search,
   Settings,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -95,42 +96,17 @@ export const Navbar = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {user?.isDemo && (
-              <div className="hidden sm:flex items-center gap-1.5 mr-1">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-secondary/60 text-xs font-medium text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  Demo
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetDemo}
-                  disabled={isResetting}
-                  className="h-7 px-2.5 text-xs"
-                  title="Restore sample demo applications"
-                >
-                  {isResetting ? (
-                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                  ) : (
-                    <RotateCcw className="w-3 h-3 mr-1" />
-                  )}
-                  Reset
-                </Button>
-              </div>
-            )}
-
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
               onClick={openCommandPalette}
-              className="hidden lg:inline-flex items-center gap-2 h-8 px-2.5 text-xs text-muted-foreground"
+              title="Quick Command Palette (Ctrl+K)"
+              aria-label="Open Command Palette"
+              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2 text-xs text-muted-foreground"
             >
-              <Command className="w-3 h-3" />
-              <span>Jump</span>
-              <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded bg-secondary text-secondary-foreground border border-border">
-                ⌘K
-              </kbd>
+              <Search className="w-3.5 h-3.5" />
+              <kbd className="font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </Button>
 
             <ThemeToggle />
@@ -144,27 +120,38 @@ export const Navbar = () => {
                   <span className="hidden sm:inline text-xs font-medium text-foreground max-w-[140px] truncate">
                     {user?.name}
                   </span>
+                  {user?.isDemo && (
+                    <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded bg-secondary border border-border font-mono text-[10px] text-muted-foreground">
+                      Demo
+                    </span>
+                  )}
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 bg-popover border-border shadow-md">
+              <DropdownMenuContent align="end" className="w-56 bg-popover border-border shadow-md">
+                <DropdownMenuLabel className="font-normal py-1.5">
+                  <p className="text-xs font-medium text-foreground truncate">{user?.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {user?.isDemo && (
                   <>
                     <DropdownMenuItem
                       onClick={handleResetDemo}
                       disabled={isResetting}
-                      className="cursor-pointer sm:hidden"
+                      className="cursor-pointer"
                     >
-                      <RotateCcw className="w-4 h-4 mr-2" />
+                      {isResetting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                      )}
                       Reset Demo Data
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="sm:hidden" />
+                    <DropdownMenuSeparator />
                   </>
                 )}
-                <DropdownMenuItem
-                  onClick={() => navigate('/profile')}
-                  className="cursor-pointer"
-                >
+                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                   <Settings className="w-4 h-4 mr-2" />
                   Profile Settings
                 </DropdownMenuItem>

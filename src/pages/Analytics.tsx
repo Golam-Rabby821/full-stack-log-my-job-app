@@ -13,30 +13,44 @@ import {
   YAxis,
 } from 'recharts';
 import { Navbar } from '@/components/Navbar';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useAnalyticsOverview, useAnalyticsTrends } from '@/hooks/useAnalytics';
 
 const Analytics = () => {
-  const { data: overview, isLoading: overviewLoading } = useAnalyticsOverview();
-  const { data: trends, isLoading: trendsLoading } = useAnalyticsTrends();
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    error: overviewErr,
+    refetch: refetchOverview,
+  } = useAnalyticsOverview();
+  const {
+    data: trends,
+    isLoading: trendsLoading,
+    isError: trendsError,
+    error: trendsErr,
+    refetch: refetchTrends,
+  } = useAnalyticsTrends();
 
   const isLoading = overviewLoading || trendsLoading;
+  const isError = overviewError || trendsError;
 
   const statusDistribution = overview
     ? [
         { name: 'Pending', value: overview.byStatus.pending || 0, color: 'hsl(32, 82%, 48%)' },
         { name: 'Interview', value: overview.byStatus.interview || 0, color: 'hsl(217, 74%, 56%)' },
         { name: 'Offer', value: overview.byStatus.offer || 0, color: 'hsl(158, 56%, 42%)' },
-        { name: 'Accepted', value: overview.byStatus.accepted || 0, color: 'hsl(173, 66%, 34%)' },
+        { name: 'Accepted', value: overview.byStatus.accepted || 0, color: 'hsl(240, 6%, 32%)' },
         { name: 'Declined', value: overview.byStatus.declined || 0, color: 'hsl(0, 62%, 52%)' },
       ].filter((item) => item.value > 0)
     : [];
 
   const jobTypeDistribution = overview
     ? [
-        { name: 'Remote', value: overview.byJobType?.remote || 0, color: 'hsl(173, 66%, 38%)' },
-        { name: 'Hybrid', value: overview.byJobType?.hybrid || 0, color: 'hsl(217, 74%, 56%)' },
-        { name: 'Onsite', value: overview.byJobType?.onsite || 0, color: 'hsl(240, 5%, 45%)' },
+        { name: 'Remote', value: overview.byJobType?.remote || 0, color: 'hsl(240, 6%, 22%)' },
+        { name: 'Hybrid', value: overview.byJobType?.hybrid || 0, color: 'hsl(240, 5%, 48%)' },
+        { name: 'Onsite', value: overview.byJobType?.onsite || 0, color: 'hsl(240, 5%, 72%)' },
       ].filter((item) => item.value > 0)
     : [];
 
@@ -60,7 +74,7 @@ const Analytics = () => {
       label: 'Offer+',
       count: reachedOffer,
       pct: overview?.offerRate ?? 0,
-      color: 'bg-accent',
+      color: 'bg-foreground/65',
     },
     {
       label: 'Accepted',
@@ -79,11 +93,11 @@ const Analytics = () => {
   ];
 
   const chartConfig = {
-    count: { label: 'Applications', color: 'hsl(173, 66%, 38%)' },
+    count: { label: 'Applications', color: 'hsl(var(--primary))' },
     pending: { label: 'Pending', color: 'hsl(32, 82%, 48%)' },
     interview: { label: 'Interview', color: 'hsl(217, 74%, 56%)' },
     offer: { label: 'Offer', color: 'hsl(158, 56%, 42%)' },
-    accepted: { label: 'Accepted', color: 'hsl(173, 66%, 34%)' },
+    accepted: { label: 'Accepted', color: 'hsl(240, 6%, 32%)' },
     declined: { label: 'Declined', color: 'hsl(0, 62%, 52%)' },
   };
 
@@ -94,6 +108,25 @@ const Analytics = () => {
         <div className="flex items-center justify-center py-32">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const errObj = overviewErr || trendsErr;
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-14">
+          <QueryErrorState
+            title="Unable to load analytics"
+            message={errObj instanceof Error ? errObj.message : 'Please try again.'}
+            onRetry={() => {
+              void refetchOverview();
+              void refetchTrends();
+            }}
+          />
+        </main>
       </div>
     );
   }
@@ -161,8 +194,8 @@ const Analytics = () => {
               >
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(173, 66%, 38%)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="hsl(173, 66%, 38%)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -172,7 +205,7 @@ const Analytics = () => {
                 <Area
                   type="monotone"
                   dataKey="count"
-                  stroke="hsl(173, 66%, 38%)"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   fill="url(#colorCount)"
                 />
@@ -227,7 +260,7 @@ const Analytics = () => {
                 <XAxis dataKey="label" axisLine={false} tickLine={false} fontSize={11} />
                 <YAxis axisLine={false} tickLine={false} fontSize={11} allowDecimals={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="hsl(173, 66%, 38%)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </div>

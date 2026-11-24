@@ -13,12 +13,11 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
-import { Edit2, GripVertical, Trash2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CompanyAvatar } from '@/components/CompanyAvatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Job, JobStatus } from '@/types/job';
+import { Button } from '@/components/ui/button';
 
 interface KanbanBoardProps {
   jobs: Job[];
@@ -44,59 +43,40 @@ interface KanbanCardContentProps {
 
 const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardContentProps) => {
   const navigate = useNavigate();
+  const meta = [job.salary, job.jobType].filter(Boolean);
 
   return (
     <div
-      className={`bg-card rounded-lg p-3.5 border border-border transition-all ${
+      className={`group bg-card rounded-lg p-3.5 border border-border transition-all ${
         isDragging ? 'shadow-xl ring-1 ring-foreground/20' : 'hover:border-foreground/25'
       }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2.5">
+      <div className="flex items-start gap-2.5 mb-2">
+        <CompanyAvatar company={job.company} className="w-7 h-7 text-[10px] mt-0.5" />
         <button
           type="button"
           onClick={() => navigate(`/job/${job._id}`)}
-          className="text-left flex items-start gap-2.5 flex-1 min-w-0 group"
+          className="text-left flex-1 min-w-0"
         >
-          <CompanyAvatar company={job.company} className="w-7 h-7 text-[10px] mt-0.5" />
-          <div className="min-w-0">
-            <p className="font-medium text-sm text-foreground truncate group-hover:underline underline-offset-4">
-              {job.position}
-            </p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{job.company}</p>
+          <p className="font-medium text-xs leading-snug text-foreground line-clamp-2 group-hover:underline underline-offset-4">
+            {job.position}
+          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[11px] text-muted-foreground truncate">{job.company}</span>
+            {job.priority === 'high' && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0"
+                title="High priority"
+              />
+            )}
           </div>
         </button>
-        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-1" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 mb-2">
-        {job.jobType && (
-          <Badge variant={job.jobType} className="text-[10px] px-1.5 py-0">
-            {job.jobType}
-          </Badge>
-        )}
-        {job.priority && job.priority !== 'medium' && (
-          <Badge variant={job.priority} className="text-[10px] px-1.5 py-0">
-            {job.priority}
-          </Badge>
-        )}
-        {job.salary && (
-          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
-            {job.salary}
-          </span>
-        )}
-      </div>
-
-      {job.tags && job.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2.5">
-          {job.tags.slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="font-mono text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+      {meta.length > 0 && (
+        <p className="font-mono text-[11px] text-muted-foreground tabular-nums truncate mb-2">
+          {meta.join(' · ')}
+        </p>
       )}
 
       <div className="flex items-center justify-between pt-2 border-t border-border/60">
@@ -104,7 +84,7 @@ const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardCont
           {format(new Date(job.appliedDate || job.createdAt), 'MMM d')}
         </span>
         {onEdit && onDelete && (
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <Button
               type="button"
               variant="ghost"
@@ -188,7 +168,7 @@ const DroppableColumn = ({
     <div
       ref={setNodeRef}
       data-testid={`kanban-column-${status}`}
-      className={`rounded-xl bg-secondary/45 border border-border/80 p-2.5 flex flex-col min-h-[460px] transition-colors ${
+      className={`rounded-xl bg-secondary/45 border border-border/80 p-2.5 flex flex-col min-h-[440px] transition-colors ${
         isOver ? 'ring-1 ring-foreground/30 bg-secondary/80' : ''
       }`}
     >

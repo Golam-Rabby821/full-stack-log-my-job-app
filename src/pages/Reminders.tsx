@@ -7,6 +7,7 @@ import { useDeleteReminder, useReminders, useUpdateReminder } from '@/hooks/useR
 import { Reminder } from '@/types/reminder';
 import { CompanyAvatar } from '@/components/CompanyAvatar';
 import { Navbar } from '@/components/Navbar';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,7 +17,7 @@ const Reminders = () => {
   const navigate = useNavigate();
   const [includePast, setIncludePast] = useState(false);
 
-  const { data, isLoading } = useReminders(includePast);
+  const { data, isLoading, isError, error, refetch } = useReminders(includePast);
   const updateReminderMutation = useUpdateReminder();
   const deleteReminderMutation = useDeleteReminder();
 
@@ -85,7 +86,13 @@ const Reminders = () => {
           </div>
         </div>
 
-        {reminders.length === 0 ? (
+        {isError ? (
+          <QueryErrorState
+            title="Unable to load reminders"
+            message={error instanceof Error ? error.message : 'Please try again.'}
+            onRetry={() => void refetch()}
+          />
+        ) : reminders.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
             <div className="mx-auto w-10 h-10 rounded-lg border border-border bg-secondary flex items-center justify-center mb-3">
               <Bell className="w-4 h-4 text-foreground" />

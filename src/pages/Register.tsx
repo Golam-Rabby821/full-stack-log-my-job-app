@@ -54,15 +54,15 @@ const Register = () => {
           </h2>
           <ul className="space-y-3 text-sm text-muted-foreground pt-2">
             <li className="flex items-center gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="w-1.5 h-1.5 rounded-full bg-foreground/40" />
               Drag-and-drop Kanban board & compact list ledger
             </li>
             <li className="flex items-center gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="w-1.5 h-1.5 rounded-full bg-foreground/40" />
               Automatic status timeline & follow-up reminders
             </li>
             <li className="flex items-center gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="w-1.5 h-1.5 rounded-full bg-foreground/40" />
               One-click CSV & PDF exports anytime
             </li>
           </ul>

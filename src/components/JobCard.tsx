@@ -50,18 +50,24 @@ export const JobCard = ({
     navigate(`/job/${job._id}`);
   };
 
+  const showJobType =
+    Boolean(job.jobType) &&
+    job.location?.trim().toLowerCase() !== job.jobType?.toLowerCase();
+
   return (
     <div
       onClick={handleRowClick}
-      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 hover:bg-secondary/35 transition-colors cursor-pointer"
+      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 hover:bg-secondary/35 transition-colors cursor-pointer"
     >
-      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         {onToggleSelect && (
           <Checkbox
             checked={selected}
             onCheckedChange={() => onToggleSelect(job._id)}
             aria-label={`Select ${job.position} at ${job.company}`}
-            className="shrink-0"
+            className={`shrink-0 transition-opacity ${
+              selected ? 'opacity-100' : 'sm:opacity-40 sm:group-hover:opacity-100'
+            }`}
           />
         )}
 
@@ -73,12 +79,13 @@ export const JobCard = ({
               {job.position}
             </h3>
             {job.priority === 'high' && (
-              <Badge variant="high" className="text-[10px] px-1.5 py-0">
-                High
-              </Badge>
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0"
+                title="High priority"
+              />
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
             <span className="font-medium text-foreground/80">{job.company}</span>
             {job.location && (
               <>
@@ -86,7 +93,7 @@ export const JobCard = ({
                 <span className="truncate max-w-[160px]">{job.location}</span>
               </>
             )}
-            {job.jobType && (
+            {showJobType && (
               <>
                 <span aria-hidden="true">·</span>
                 <span className="capitalize">{job.jobType}</span>
@@ -97,19 +104,6 @@ export const JobCard = ({
       </div>
 
       <div className="flex items-center justify-between sm:justify-end gap-4 pl-10 sm:pl-0 shrink-0">
-        {job.tags && job.tags.length > 0 && (
-          <div className="hidden xl:flex items-center gap-1">
-            {job.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="text-[11px] font-mono px-2 py-0.5 bg-secondary rounded text-muted-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
         {job.salary && (
           <span className="hidden md:inline font-mono text-xs text-muted-foreground tabular-nums">
             {job.salary}

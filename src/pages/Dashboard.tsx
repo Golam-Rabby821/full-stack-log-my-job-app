@@ -31,8 +31,10 @@ import { JobModal } from '@/components/JobModal';
 import { KanbanBoard } from '@/components/KanbanBoard';
 import { Navbar } from '@/components/Navbar';
 import { PaginationControls } from '@/components/PaginationControls';
+import { QueryErrorState } from '@/components/QueryErrorState';
 import { ReminderWidget } from '@/components/ReminderWidget';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,7 +89,13 @@ const Dashboard = () => {
       ? { ...filters, status: 'all', page: 1, limit: 100 }
       : filters;
 
-  const { data: jobsData, isLoading } = useJobs(activeFilters);
+  const {
+    data: jobsData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useJobs(activeFilters);
   const { data: overview } = useAnalyticsOverview();
 
   const createJobMutation = useCreateJob();
@@ -154,9 +162,9 @@ const Dashboard = () => {
     try {
       await createJobMutation.mutateAsync(data);
       toast.success('Job added successfully!');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create job');
-      throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create job');
+      throw err;
     }
   };
 
@@ -165,9 +173,9 @@ const Dashboard = () => {
     try {
       await updateJobMutation.mutateAsync({ id: selectedJob._id, data });
       toast.success('Job updated successfully!');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update job');
-      throw error;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update job');
+      throw err;
     }
   };
 
@@ -176,8 +184,8 @@ const Dashboard = () => {
       { id: jobId, status: newStatus },
       {
         onSuccess: () => toast.success(`Moved to ${newStatus}`),
-        onError: (error) =>
-          toast.error(error instanceof Error ? error.message : 'Failed to update status'),
+        onError: (err) =>
+          toast.error(err instanceof Error ? err.message : 'Failed to update status'),
       }
     );
   };
@@ -189,8 +197,8 @@ const Dashboard = () => {
       toast.success('Job deleted successfully!');
       setJobToDelete(null);
       setSelectedIds((prev) => prev.filter((id) => id !== jobToDelete));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete job');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete job');
     }
   };
 
@@ -269,6 +277,8 @@ const Dashboard = () => {
     }
   };
 
+  const allSelected = jobs.length > 0 && selectedIds.length === jobs.length;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -334,7 +344,7 @@ const Dashboard = () => {
         </div>
 
         {/* Unified Segmented KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl border border-border bg-card divide-y sm:divide-y-0 sm:divide-x divide-border overflow-hidden mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl border border-border bg-card divide-y sm:divide-y-0 sm:divide-x divide-border overflow-hidden mb-5">
           {kpiSegments.map((segment) => {
             const isSelected =
               viewMode === 'list' && (filters.status || 'all') === segment.key;
@@ -347,7 +357,7 @@ const Dashboard = () => {
                     handleFilterChange({ ...filters, status: segment.key, page: 1 });
                   }
                 }}
-                className={`px-4 py-3.5 text-left transition-colors ${
+                className={`px-4 py-3 text-left transition-colors ${
                   viewMode === 'list' ? 'hover:bg-secondary/40 cursor-pointer' : 'cursor-default'
                 } ${isSelected ? 'bg-secondary/60' : ''}`}
               >
@@ -357,7 +367,7 @@ const Dashboard = () => {
                     {segment.label}
                   </span>
                 </div>
-                <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
+                <p className="text-xl font-semibold font-mono tabular-nums text-foreground">
                   {segment.value}
                 </p>
               </button>
@@ -365,10 +375,11 @@ const Dashboard = () => {
           })}
         </div>
 
+        {/* Single-line Reminder Bar */}
         <ReminderWidget />
 
         {/* Search & Filter Toolbar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -388,7 +399,8 @@ const Dashboard = () => {
           />
         </div>
 
-        {viewMode === 'list' && (
+        {/* Active Bulk Selection Toolbar (only when items are selected) */}
+        {viewMode === 'list' && selectedIds.length > 0 && (
           <div className="mb-4">
             <BulkActions
               selectedIds={selectedIds}
@@ -408,6 +420,12 @@ const Dashboard = () => {
           <div className="flex items-center justify-center py-20 rounded-xl border border-border bg-card">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
+        ) : isError ? (
+          <QueryErrorState
+            title="Unable to load applications"
+            message={error instanceof Error ? error.message : 'Please try again.'}
+            onRetry={() => void refetch()}
+          />
         ) : jobs.length === 0 ? (
           stats.total === 0 ? (
             <EmptyState onAddJob={() => setIsModalOpen(true)} />
@@ -425,18 +443,38 @@ const Dashboard = () => {
           />
         ) : (
           <>
-            <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
-              {jobs.map((job, index) => (
-                <JobCard
-                  key={job._id}
-                  job={job}
-                  onEdit={handleEditClick}
-                  onDelete={(id) => setJobToDelete(id)}
-                  index={index}
-                  selected={selectedIds.includes(job._id)}
-                  onToggleSelect={toggleSelectJob}
-                />
-              ))}
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/30 text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={(checked) =>
+                      checked ? handleSelectAll() : handleDeselectAll()
+                    }
+                    aria-label="Select all jobs on page"
+                  />
+                  <span>Application</span>
+                </div>
+                <div className="flex items-center gap-8 pr-16">
+                  <span className="hidden md:inline">Compensation</span>
+                  <span className="w-[88px]">Stage</span>
+                  <span className="hidden sm:inline w-20 text-right">Applied</span>
+                </div>
+              </div>
+
+              <div className="divide-y divide-border">
+                {jobs.map((job, index) => (
+                  <JobCard
+                    key={job._id}
+                    job={job}
+                    onEdit={handleEditClick}
+                    onDelete={(id) => setJobToDelete(id)}
+                    index={index}
+                    selected={selectedIds.includes(job._id)}
+                    onToggleSelect={toggleSelectJob}
+                  />
+                ))}
+              </div>
             </div>
 
             <PaginationControls

@@ -18,7 +18,8 @@ export const BrandMark = ({ className, showWordmark = true }: BrandMarkProps) =>
             width="11"
             height="2.25"
             rx="1.125"
-            className="fill-accent"
+            fill="currentColor"
+            opacity="0.55"
           />
         </svg>
       </span>

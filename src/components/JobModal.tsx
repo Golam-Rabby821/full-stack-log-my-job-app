@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -138,6 +139,9 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
           <DialogTitle className="text-lg font-semibold tracking-tight">
             {job ? 'Edit Job' : 'Add New Job'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {job ? 'Update job application details' : 'Enter details for a new job application'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 mt-1" noValidate>

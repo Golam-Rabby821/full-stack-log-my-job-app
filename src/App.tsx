@@ -13,6 +13,9 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import JobDetails from './pages/JobDetails';
+import Profile from './pages/Profile';
+import Reminders from './pages/Reminders';
 import NotFound from './pages/NotFound';
 
 const lazyWithRetry = <T extends ComponentType<unknown>>(
@@ -37,10 +40,7 @@ const lazyWithRetry = <T extends ComponentType<unknown>>(
     }
   });
 
-const JobDetails = lazyWithRetry(() => import('./pages/JobDetails'), 'job-details');
 const Analytics = lazyWithRetry(() => import('./pages/Analytics'), 'analytics');
-const Profile = lazyWithRetry(() => import('./pages/Profile'), 'profile');
-const Reminders = lazyWithRetry(() => import('./pages/Reminders'), 'reminders');
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,7 +54,7 @@ const queryClient = new QueryClient({
 
 const PageFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
   </div>
 );
 

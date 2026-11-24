@@ -1,11 +1,21 @@
 import React from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Home, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
+
+const isChunkLoadError = (error: Error | null): boolean => {
+  if (!error) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes('dynamically imported module') ||
+    msg.includes('loading chunk') ||
+    msg.includes('failed to fetch')
+  );
+};
 
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -24,22 +34,37 @@ export class ErrorBoundary extends React.Component<
     window.location.reload();
   };
 
+  handleHome = () => {
+    window.location.href = '/';
+  };
+
   render() {
     if (this.state.hasError) {
+      const chunkError = isChunkLoadError(this.state.error);
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-6">
-          <div className="glass rounded-2xl p-8 max-w-md w-full text-center space-y-4">
-            <div className="mx-auto w-12 h-12 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6" />
+          <div className="rounded-xl border border-border bg-card p-8 max-w-md w-full text-center shadow-sm">
+            <div className="mx-auto w-11 h-11 rounded-lg border border-destructive/25 bg-destructive/10 text-destructive flex items-center justify-center mb-4">
+              <AlertTriangle className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold text-foreground">Something went wrong</h1>
-            <p className="text-sm text-muted-foreground">
-              {this.state.error?.message || 'An unexpected rendering error occurred.'}
+            <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1.5">
+              {chunkError ? 'A newer version is available' : 'Something went wrong'}
+            </h1>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              {chunkError
+                ? 'This page was updated or temporarily interrupted while loading. Reload to fetch the latest bundle.'
+                : this.state.error?.message || 'An unexpected rendering error occurred.'}
             </p>
-            <Button onClick={this.handleReload} variant="glow" className="w-full">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reload Application
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <Button onClick={this.handleReload} className="flex-1">
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                Reload Page
+              </Button>
+              <Button variant="outline" onClick={this.handleHome} className="flex-1">
+                <Home className="w-3.5 h-3.5 mr-1.5" />
+                Back to Home
+              </Button>
+            </div>
           </div>
         </div>
       );

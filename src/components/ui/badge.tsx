@@ -24,9 +24,9 @@ const badgeVariants = cva(
         medium: "border-warning/25 bg-warning/10 text-warning",
         low: "border-border bg-muted text-muted-foreground",
         // Job type variants
-        remote: "border-accent/25 bg-accent/10 text-accent",
-        hybrid: "border-info/25 bg-info/10 text-info",
-        onsite: "border-border bg-secondary text-secondary-foreground",
+        remote: "border-border bg-secondary/60 text-muted-foreground",
+        hybrid: "border-border bg-secondary/60 text-muted-foreground",
+        onsite: "border-border bg-secondary/60 text-muted-foreground",
       },
     },
     defaultVariants: {
