@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { ComponentType, lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -9,16 +9,38 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { CommandPalette } from '@/components/CommandPalette';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
 
-const Index = lazy(() => import('./pages/Index'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const JobDetails = lazy(() => import('./pages/JobDetails'));
-const Analytics = lazy(() => import('./pages/Analytics'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Reminders = lazy(() => import('./pages/Reminders'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const lazyWithRetry = <T extends ComponentType<unknown>>(
+  importer: () => Promise<{ default: T }>,
+  key: string
+) =>
+  lazy(async () => {
+    const storageKey = `lazy_retry_${key}`;
+    try {
+      const mod = await importer();
+      sessionStorage.removeItem(storageKey);
+      return mod;
+    } catch (error) {
+      const alreadyRetried = sessionStorage.getItem(storageKey) === '1';
+      if (!alreadyRetried) {
+        sessionStorage.setItem(storageKey, '1');
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {});
+      }
+      sessionStorage.removeItem(storageKey);
+      throw error;
+    }
+  });
+
+const JobDetails = lazyWithRetry(() => import('./pages/JobDetails'), 'job-details');
+const Analytics = lazyWithRetry(() => import('./pages/Analytics'), 'analytics');
+const Profile = lazyWithRetry(() => import('./pages/Profile'), 'profile');
+const Reminders = lazyWithRetry(() => import('./pages/Reminders'), 'reminders');
 
 const queryClient = new QueryClient({
   defaultOptions: {

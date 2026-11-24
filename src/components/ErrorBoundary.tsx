@@ -21,7 +21,7 @@ export class ErrorBoundary extends React.Component<
   }
 
   handleReload = () => {
-    window.location.href = '/dashboard';
+    window.location.reload();
   };
 
   render() {
