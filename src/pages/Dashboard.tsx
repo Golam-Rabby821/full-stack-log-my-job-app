@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
-  Briefcase,
-  CheckCircle2,
-  Clock,
   Download,
   FileText,
-  Gift,
   Kanban,
   List,
   Loader2,
-  MessageSquare,
   Plus,
   Search,
-  XCircle,
 } from 'lucide-react';
 import { useAnalyticsOverview } from '@/hooks/useAnalytics';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
@@ -38,9 +32,7 @@ import { KanbanBoard } from '@/components/KanbanBoard';
 import { Navbar } from '@/components/Navbar';
 import { PaginationControls } from '@/components/PaginationControls';
 import { ReminderWidget } from '@/components/ReminderWidget';
-import { StatsCard } from '@/components/StatsCard';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -117,6 +109,20 @@ const Dashboard = () => {
     accepted: overview?.byStatus?.accepted ?? 0,
     declined: overview?.byStatus?.declined ?? 0,
   };
+
+  const kpiSegments: {
+    key: JobStatus | 'all';
+    label: string;
+    value: number;
+    dotClass: string;
+  }[] = [
+    { key: 'all', label: 'Total', value: stats.total, dotClass: 'bg-foreground' },
+    { key: 'pending', label: 'Pending', value: stats.pending, dotClass: 'bg-warning' },
+    { key: 'interview', label: 'Interview', value: stats.interview, dotClass: 'bg-info' },
+    { key: 'offer', label: 'Offer', value: stats.offer, dotClass: 'bg-success' },
+    { key: 'accepted', label: 'Accepted', value: stats.accepted, dotClass: 'bg-success' },
+    { key: 'declined', label: 'Declined', value: stats.declined, dotClass: 'bg-destructive' },
+  ];
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
     setFilters((prev) => ({ ...prev, search: value, page: 1 }));
@@ -267,15 +273,18 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 animate-fade-in">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-14">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Track and manage your job applications</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Pipeline</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Track applications, interviews, and offers
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-lg border border-border bg-secondary/50 p-0.5">
               <Button
                 type="button"
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -300,12 +309,12 @@ const Dashboard = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9">
-                  <Download className="w-4 h-4 mr-2" />
+                <Button variant="outline" size="sm" className="h-8">
+                  <Download className="w-3.5 h-3.5 mr-1.5" />
                   Export
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass border-border">
+              <DropdownMenuContent align="end" className="bg-popover border-border shadow-md">
                 <DropdownMenuItem onClick={handleExportCsv} className="cursor-pointer">
                   <Download className="w-4 h-4 mr-2" />
                   Export CSV
@@ -316,48 +325,71 @@ const Dashboard = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button size="sm" onClick={() => setIsModalOpen(true)} className="h-8">
+              <Plus className="w-3.5 h-3.5" />
+              Add Job
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-          <StatsCard title="Total" value={stats.total} icon={Briefcase} color="primary" index={0} />
-          <StatsCard title="Pending" value={stats.pending} icon={Clock} color="warning" index={1} />
-          <StatsCard title="Interview" value={stats.interview} icon={MessageSquare} color="info" index={2} />
-          <StatsCard title="Offer" value={stats.offer} icon={Gift} color="success" index={3} />
-          <StatsCard title="Accepted" value={stats.accepted} icon={CheckCircle2} color="success" index={4} />
-          <StatsCard title="Declined" value={stats.declined} icon={XCircle} color="destructive" index={5} />
+        {/* Unified Segmented KPI Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 rounded-xl border border-border bg-card divide-y sm:divide-y-0 sm:divide-x divide-border overflow-hidden mb-6">
+          {kpiSegments.map((segment) => {
+            const isSelected =
+              viewMode === 'list' && (filters.status || 'all') === segment.key;
+            return (
+              <button
+                key={segment.key}
+                type="button"
+                onClick={() => {
+                  if (viewMode === 'list') {
+                    handleFilterChange({ ...filters, status: segment.key, page: 1 });
+                  }
+                }}
+                className={`px-4 py-3.5 text-left transition-colors ${
+                  viewMode === 'list' ? 'hover:bg-secondary/40 cursor-pointer' : 'cursor-default'
+                } ${isSelected ? 'bg-secondary/60' : ''}`}
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${segment.dotClass}`} />
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {segment.label}
+                  </span>
+                </div>
+                <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
+                  {segment.value}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
         <ReminderWidget />
 
-        <div
-          className="flex flex-col sm:flex-row gap-4 mb-4 animate-fade-in"
-          style={{ animationDelay: '0.2s' }}
-        >
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        {/* Search & Filter Toolbar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search company, position, or tags..."
               value={searchInput}
               onChange={handleSearchChange}
-              className="pl-10"
+              className="pl-9 h-9 bg-card"
             />
           </div>
-          <Button variant="glow" onClick={() => setIsModalOpen(true)} className="shrink-0">
-            <Plus className="w-5 h-5" />
-            Add Job
-          </Button>
-        </div>
 
-        <div className="flex flex-col gap-3 mb-6">
           <AdvancedFilters
             filters={filters}
             onChange={handleFilterChange}
             onReset={handleResetFilters}
             hideStatusFilter={viewMode === 'kanban'}
           />
-          {viewMode === 'list' && (
+        </div>
+
+        {viewMode === 'list' && (
+          <div className="mb-4">
             <BulkActions
               selectedIds={selectedIds}
               totalItems={jobs.length}
@@ -368,18 +400,19 @@ const Dashboard = () => {
               onBulkPriorityUpdate={handleBulkPriorityUpdate}
               isLoading={bulkDeleteMutation.isPending || bulkUpdateMutation.isPending}
             />
-          )}
-        </div>
+          </div>
+        )}
 
+        {/* Jobs View */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-20 rounded-xl border border-border bg-card">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : jobs.length === 0 ? (
           stats.total === 0 ? (
             <EmptyState onAddJob={() => setIsModalOpen(true)} />
           ) : (
-            <div className="text-center py-16 text-muted-foreground">
+            <div className="text-center py-16 rounded-xl border border-border bg-card text-sm text-muted-foreground">
               No jobs match your filters
             </div>
           )
@@ -392,23 +425,17 @@ const Dashboard = () => {
           />
         ) : (
           <>
-            <div className="grid gap-4">
+            <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
               {jobs.map((job, index) => (
-                <div key={job._id} className="flex items-center gap-3">
-                  <Checkbox
-                    checked={selectedIds.includes(job._id)}
-                    onCheckedChange={() => toggleSelectJob(job._id)}
-                    className="shrink-0"
-                  />
-                  <div className="flex-1">
-                    <JobCard
-                      job={job}
-                      onEdit={handleEditClick}
-                      onDelete={(id) => setJobToDelete(id)}
-                      index={index}
-                    />
-                  </div>
-                </div>
+                <JobCard
+                  key={job._id}
+                  job={job}
+                  onEdit={handleEditClick}
+                  onDelete={(id) => setJobToDelete(id)}
+                  index={index}
+                  selected={selectedIds.includes(job._id)}
+                  onToggleSelect={toggleSelectJob}
+                />
               ))}
             </div>
 

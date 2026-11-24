@@ -13,8 +13,9 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { format } from 'date-fns';
-import { Building2, Calendar, Edit2, GripVertical, Trash2 } from 'lucide-react';
+import { Edit2, GripVertical, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CompanyAvatar } from '@/components/CompanyAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Job, JobStatus } from '@/types/job';
@@ -26,12 +27,12 @@ interface KanbanBoardProps {
   onDelete: (id: string) => void;
 }
 
-const COLUMNS: { status: JobStatus; label: string; accentClass: string }[] = [
-  { status: 'pending', label: 'Pending', accentClass: 'border-t-warning' },
-  { status: 'interview', label: 'Interview', accentClass: 'border-t-info' },
-  { status: 'offer', label: 'Offer', accentClass: 'border-t-success' },
-  { status: 'accepted', label: 'Accepted', accentClass: 'border-t-success' },
-  { status: 'declined', label: 'Declined', accentClass: 'border-t-destructive' },
+const COLUMNS: { status: JobStatus; label: string; dotClass: string }[] = [
+  { status: 'pending', label: 'Pending', dotClass: 'bg-warning' },
+  { status: 'interview', label: 'Interview', dotClass: 'bg-info' },
+  { status: 'offer', label: 'Offer', dotClass: 'bg-success' },
+  { status: 'accepted', label: 'Accepted', dotClass: 'bg-success' },
+  { status: 'declined', label: 'Declined', dotClass: 'bg-destructive' },
 ];
 
 interface KanbanCardContentProps {
@@ -46,25 +47,25 @@ const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardCont
 
   return (
     <div
-      className={`glass rounded-lg p-3.5 border border-border/60 transition-all ${
-        isDragging ? 'shadow-2xl ring-2 ring-primary/50 rotate-1' : 'hover:border-primary/40'
+      className={`bg-card rounded-lg p-3.5 border border-border transition-all ${
+        isDragging ? 'shadow-xl ring-1 ring-foreground/20' : 'hover:border-foreground/25'
       }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="flex items-start justify-between gap-2 mb-2.5">
         <button
           type="button"
           onClick={() => navigate(`/job/${job._id}`)}
-          className="text-left flex-1 min-w-0 group"
+          className="text-left flex items-start gap-2.5 flex-1 min-w-0 group"
         >
-          <p className="font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors">
-            {job.position}
-          </p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-            <Building2 className="w-3 h-3 shrink-0" />
-            {job.company}
-          </p>
+          <CompanyAvatar company={job.company} className="w-7 h-7 text-[10px] mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-medium text-sm text-foreground truncate group-hover:underline underline-offset-4">
+              {job.position}
+            </p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{job.company}</p>
+          </div>
         </button>
-        <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-0.5" />
+        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-1" />
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 mb-2">
@@ -79,16 +80,18 @@ const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardCont
           </Badge>
         )}
         {job.salary && (
-          <span className="text-[10px] text-muted-foreground font-medium">{job.salary}</span>
+          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+            {job.salary}
+          </span>
         )}
       </div>
 
       {job.tags && job.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
+        <div className="flex flex-wrap gap-1 mb-2.5">
           {job.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-secondary-foreground"
+              className="font-mono text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground"
             >
               {tag}
             </span>
@@ -96,13 +99,12 @@ const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardCont
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-2 border-t border-border/40">
-        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
+      <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
           {format(new Date(job.appliedDate || job.createdAt), 'MMM d')}
         </span>
         {onEdit && onDelete && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               type="button"
               variant="ghost"
@@ -112,7 +114,7 @@ const KanbanCardContent = ({ job, onEdit, onDelete, isDragging }: KanbanCardCont
                 e.stopPropagation();
                 onEdit(job);
               }}
-              className="h-6 w-6 text-muted-foreground hover:text-primary"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
             >
               <Edit2 className="w-3 h-3" />
             </Button>
@@ -166,7 +168,7 @@ const DraggableKanbanCard = ({ job, onEdit, onDelete }: DraggableKanbanCardProps
 interface DroppableColumnProps {
   status: JobStatus;
   label: string;
-  accentClass: string;
+  dotClass: string;
   jobs: Job[];
   onEdit: (job: Job) => void;
   onDelete: (id: string) => void;
@@ -175,7 +177,7 @@ interface DroppableColumnProps {
 const DroppableColumn = ({
   status,
   label,
-  accentClass,
+  dotClass,
   jobs,
   onEdit,
   onDelete,
@@ -186,21 +188,24 @@ const DroppableColumn = ({
     <div
       ref={setNodeRef}
       data-testid={`kanban-column-${status}`}
-      className={`glass rounded-xl p-3 border-t-4 ${accentClass} flex flex-col min-h-[420px] transition-colors ${
-        isOver ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+      className={`rounded-xl bg-secondary/45 border border-border/80 p-2.5 flex flex-col min-h-[460px] transition-colors ${
+        isOver ? 'ring-1 ring-foreground/30 bg-secondary/80' : ''
       }`}
     >
-      <div className="flex items-center justify-between mb-3 px-1">
-        <h3 className="font-semibold text-sm text-foreground">{label}</h3>
-        <Badge variant={status} className="text-xs px-2 py-0.5">
+      <div className="flex items-center justify-between px-1.5 py-1.5 mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${dotClass}`} />
+          <h3 className="font-medium text-xs text-foreground">{label}</h3>
+        </div>
+        <span className="font-mono text-[11px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-background/70 border border-border/70">
           {jobs.length}
-        </Badge>
+        </span>
       </div>
 
-      <div className="space-y-2.5 flex-1">
+      <div className="space-y-2 flex-1">
         {jobs.length === 0 ? (
-          <div className="h-24 rounded-lg border border-dashed border-border/60 flex items-center justify-center text-xs text-muted-foreground">
-            Drop job here
+          <div className="h-24 rounded-lg border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
+            Drop here
           </div>
         ) : (
           jobs.map((job) => (
@@ -241,13 +246,13 @@ export const KanbanBoard = ({ jobs, onStatusChange, onEdit, onDelete }: KanbanBo
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {COLUMNS.map((col) => (
           <DroppableColumn
             key={col.status}
             status={col.status}
             label={col.label}
-            accentClass={col.accentClass}
+            dotClass={col.dotClass}
             jobs={jobs.filter((job) => job.status === col.status)}
             onEdit={onEdit}
             onDelete={onDelete}

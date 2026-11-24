@@ -29,7 +29,7 @@ export const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="glass border-border/50">
+      <AlertDialogContent className="bg-card border border-border shadow-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-foreground">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">

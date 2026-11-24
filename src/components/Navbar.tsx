@@ -11,15 +11,13 @@ import {
   LogOut,
   RotateCcw,
   Settings,
-  Sparkles,
-  User,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { BrandMark } from '@/components/BrandMark';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +26,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+const getInitial = (name?: string) => (name?.trim()?.[0] || 'U').toUpperCase();
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -59,49 +59,49 @@ export const Navbar = () => {
   };
 
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/dashboard', label: 'Pipeline', icon: LayoutDashboard },
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/reminders', label: 'Reminders', icon: Bell },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <Link to="/dashboard" className="flex items-center gap-3">
-              <img src="/logo-icon.svg" alt="Logo" className="w-10 h-10" />
-              <span className="font-bold text-xl tracking-tight">
-                Log<span className="text-primary">My</span>Jobs
-              </span>
+    <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14">
+          <div className="flex items-center gap-6">
+            <Link to="/dashboard" aria-label="LogMyJobs Pipeline">
+              <BrandMark />
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={cn(
-                    'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                    location.pathname === link.to
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                  )}
-                >
-                  <link.icon className="w-4 h-4" />
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.to;
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                      isActive
+                        ? 'bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+                    )}
+                  >
+                    <link.icon className="w-3.5 h-3.5" />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {user?.isDemo && (
               <div className="hidden sm:flex items-center gap-1.5 mr-1">
-                <Badge variant="default" className="gap-1 py-1">
-                  <Sparkles className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-secondary/60 text-xs font-medium text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   Demo
-                </Badge>
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
@@ -126,10 +126,10 @@ export const Navbar = () => {
               onClick={openCommandPalette}
               className="hidden lg:inline-flex items-center gap-2 h-8 px-2.5 text-xs text-muted-foreground"
             >
-              <Command className="w-3.5 h-3.5" />
-              <span>Quick Jump</span>
-              <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-secondary text-secondary-foreground">
-                Ctrl K
+              <Command className="w-3 h-3" />
+              <span>Jump</span>
+              <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded bg-secondary text-secondary-foreground border border-border">
+                ⌘K
               </kbd>
             </Button>
 
@@ -137,15 +137,17 @@ export const Navbar = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                    <User className="w-4 h-4" />
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2 h-8">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-md bg-secondary border border-border text-foreground font-mono text-xs font-medium">
+                    {getInitial(user?.name)}
                   </div>
-                  <span className="hidden sm:inline text-foreground">{user?.name}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <span className="hidden sm:inline text-xs font-medium text-foreground max-w-[140px] truncate">
+                    {user?.name}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 glass border-border">
+              <DropdownMenuContent align="end" className="w-52 bg-popover border-border shadow-md">
                 {user?.isDemo && (
                   <>
                     <DropdownMenuItem

@@ -7,17 +7,15 @@ interface EmptyStateProps {
 
 export const EmptyState = ({ onAddJob }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
-      <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 text-primary mb-6">
-        <Briefcase className="w-10 h-10" />
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-xl border border-dashed border-border bg-card">
+      <div className="flex items-center justify-center w-11 h-11 rounded-lg border border-border bg-secondary text-foreground mb-4">
+        <Briefcase className="w-5 h-5" />
       </div>
-      <h3 className="text-xl font-semibold text-foreground mb-2">No jobs tracked yet</h3>
-      <p className="text-muted-foreground mb-6 max-w-sm">
-        Start tracking your job applications to stay organized and on top of your career journey.
+      <h3 className="text-base font-semibold text-foreground mb-1">No jobs tracked yet</h3>
+      <p className="text-sm text-muted-foreground mb-5 max-w-sm">
+        Add your first application to start tracking stages, notes, and follow-up reminders.
       </p>
-      <Button variant="glow" onClick={onAddJob}>
-        Add Your First Job
-      </Button>
+      <Button onClick={onAddJob}>Add Your First Job</Button>
     </div>
   );
 };

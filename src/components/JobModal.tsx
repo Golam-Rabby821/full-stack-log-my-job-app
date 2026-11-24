@@ -95,7 +95,6 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
   const onFormSubmit = async (values: JobFormValues) => {
     const payload: CreateJobData = job
       ? {
-          // On edit, explicitly pass empty strings and [] so cleared optional fields are persisted
           company: values.company,
           position: values.position,
           status: values.status,
@@ -134,16 +133,16 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass border-border/50 sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="bg-card border border-border shadow-xl sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-lg font-semibold tracking-tight">
             {job ? 'Edit Job' : 'Add New Job'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 mt-2" noValidate>
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 mt-1" noValidate>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-secondary/50">
+            <TabsList className="grid w-full grid-cols-4 bg-secondary/60">
               <TabsTrigger value="basic" className="gap-1.5 text-xs">
                 <Briefcase className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Basic</span>
@@ -164,15 +163,19 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
 
             <TabsContent value="basic" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="company" className="text-xs font-medium">
+                    Company *
+                  </Label>
                   <Input id="company" placeholder="Company name" {...register('company')} />
                   {errors.company && (
                     <p className="text-xs text-destructive">{errors.company.message}</p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="position" className="text-xs font-medium">
+                    Position *
+                  </Label>
                   <Input id="position" placeholder="Job title" {...register('position')} />
                   {errors.position && (
                     <p className="text-xs text-destructive">{errors.position.message}</p>
@@ -181,17 +184,19 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="status" className="text-xs font-medium">
+                    Status
+                  </Label>
                   <Controller
                     name="status"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={(v) => field.onChange(v as JobStatus)}>
-                        <SelectTrigger className="bg-secondary/50">
+                        <SelectTrigger className="bg-background">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="glass border-border">
+                        <SelectContent className="bg-popover border-border">
                           <SelectItem value="pending">Pending</SelectItem>
                           <SelectItem value="interview">Interview</SelectItem>
                           <SelectItem value="offer">Offer</SelectItem>
@@ -202,17 +207,19 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                     )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="priority" className="text-xs font-medium">
+                    Priority
+                  </Label>
                   <Controller
                     name="priority"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={(v) => field.onChange(v as Priority)}>
-                        <SelectTrigger className="bg-secondary/50">
+                        <SelectTrigger className="bg-background">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="glass border-border">
+                        <SelectContent className="bg-popover border-border">
                           <SelectItem value="high">High</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="low">Low</SelectItem>
@@ -224,21 +231,25 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="appliedDate">Applied Date</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="appliedDate" className="text-xs font-medium">
+                    Applied Date
+                  </Label>
                   <Input
                     id="appliedDate"
                     type="date"
-                    className="bg-secondary/50"
+                    className="bg-background"
                     {...register('appliedDate')}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="interviewDate">Interview Date</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="interviewDate" className="text-xs font-medium">
+                    Interview Date
+                  </Label>
                   <Input
                     id="interviewDate"
                     type="date"
-                    className="bg-secondary/50"
+                    className="bg-background"
                     {...register('interviewDate')}
                   />
                 </div>
@@ -247,12 +258,16 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
 
             <TabsContent value="details" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="location" className="text-xs font-medium">
+                    Location
+                  </Label>
                   <Input id="location" placeholder="City, Country" {...register('location')} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="jobType">Job Type</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="jobType" className="text-xs font-medium">
+                    Job Type
+                  </Label>
                   <Controller
                     name="jobType"
                     control={control}
@@ -261,10 +276,10 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                         value={field.value || ''}
                         onValueChange={(v) => field.onChange(v as JobType)}
                       >
-                        <SelectTrigger className="bg-secondary/50">
+                        <SelectTrigger className="bg-background">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent className="glass border-border">
+                        <SelectContent className="bg-popover border-border">
                           <SelectItem value="remote">Remote</SelectItem>
                           <SelectItem value="hybrid">Hybrid</SelectItem>
                           <SelectItem value="onsite">Onsite</SelectItem>
@@ -276,12 +291,16 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Salary</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="salary" className="text-xs font-medium">
+                    Salary
+                  </Label>
                   <Input id="salary" placeholder="e.g. $80k - $120k" {...register('salary')} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="jobUrl">Job URL</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="jobUrl" className="text-xs font-medium">
+                    Job URL
+                  </Label>
                   <Input id="jobUrl" type="url" placeholder="https://..." {...register('jobUrl')} />
                   {errors.jobUrl && (
                     <p className="text-xs text-destructive">{errors.jobUrl.message}</p>
@@ -289,8 +308,8 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Tags</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Tags</Label>
                 <Controller
                   name="tags"
                   control={control}
@@ -306,16 +325,20 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
             </TabsContent>
 
             <TabsContent value="contact" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactName">Contact Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contactName" className="text-xs font-medium">
+                  Contact Name
+                </Label>
                 <Input
                   id="contactName"
                   placeholder="Recruiter or hiring manager"
                   {...register('contactName')}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contactEmail">Contact Email</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contactEmail" className="text-xs font-medium">
+                  Contact Email
+                </Label>
                 <Input
                   id="contactEmail"
                   type="email"
@@ -329,12 +352,14 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="description">Description / Notes</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-medium">
+                  Description / Notes
+                </Label>
                 <Textarea
                   id="description"
                   placeholder="Job description, requirements, notes..."
-                  className="min-h-[150px] bg-secondary/50"
+                  className="min-h-[150px] bg-background"
                   {...register('description')}
                 />
               </div>
@@ -351,7 +376,7 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
             >
               Cancel
             </Button>
-            <Button type="submit" variant="glow" className="flex-1" disabled={isLoading}>
+            <Button type="submit" className="flex-1" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />

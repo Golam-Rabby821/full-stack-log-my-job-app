@@ -4,29 +4,29 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary/20 text-primary",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        destructive: "border-transparent bg-destructive/20 text-destructive",
-        outline: "text-foreground",
+        default: "border-border bg-secondary text-foreground",
+        secondary: "border-border/80 bg-secondary/70 text-secondary-foreground",
+        destructive: "border-destructive/25 bg-destructive/10 text-destructive",
+        outline: "border-border text-muted-foreground bg-transparent",
         // Job status variants
-        pending: "border-transparent bg-warning/20 text-warning",
-        interview: "border-transparent bg-info/20 text-info",
-        declined: "border-transparent bg-destructive/20 text-destructive",
-        offer: "border-transparent bg-success/20 text-success",
-        accepted: "border-transparent bg-success/30 text-success font-semibold",
-        success: "border-transparent bg-success/20 text-success",
+        pending: "border-warning/25 bg-warning/10 text-warning",
+        interview: "border-info/25 bg-info/10 text-info",
+        declined: "border-destructive/25 bg-destructive/10 text-destructive",
+        offer: "border-success/25 bg-success/10 text-success",
+        accepted: "border-success/35 bg-success/15 text-success font-semibold",
+        success: "border-success/25 bg-success/10 text-success",
         // Priority variants
-        high: "border-transparent bg-destructive/20 text-destructive",
-        medium: "border-transparent bg-warning/20 text-warning",
-        low: "border-transparent bg-muted text-muted-foreground",
+        high: "border-destructive/25 bg-destructive/10 text-destructive",
+        medium: "border-warning/25 bg-warning/10 text-warning",
+        low: "border-border bg-muted text-muted-foreground",
         // Job type variants
-        remote: "border-transparent bg-info/20 text-info",
-        hybrid: "border-transparent bg-primary/20 text-primary",
-        onsite: "border-transparent bg-secondary text-secondary-foreground",
+        remote: "border-accent/25 bg-accent/10 text-accent",
+        hybrid: "border-info/25 bg-info/10 text-info",
+        onsite: "border-border bg-secondary text-secondary-foreground",
       },
     },
     defaultVariants: {

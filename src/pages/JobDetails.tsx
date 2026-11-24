@@ -5,19 +5,14 @@ import { format } from 'date-fns';
 import {
   ArrowLeft,
   Bell,
-  Briefcase,
-  Building2,
   Calendar,
-  Clock,
   DollarSign,
   Edit2,
   ExternalLink,
-  FileText,
   Loader2,
   Mail,
   MapPin,
   Send,
-  Tag,
   Trash2,
   User,
   X,
@@ -33,6 +28,7 @@ import {
 } from '@/hooks/useJobs';
 import { useCreateReminder } from '@/hooks/useReminders';
 import { CreateJobData, JobStatus } from '@/types/job';
+import { CompanyAvatar } from '@/components/CompanyAvatar';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { JobModal } from '@/components/JobModal';
 import { Navbar } from '@/components/Navbar';
@@ -41,7 +37,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-const getStatusVariant = (status: JobStatus): JobStatus => status;
+const STATUS_DOT: Record<JobStatus, string> = {
+  pending: 'bg-warning',
+  interview: 'bg-info',
+  offer: 'bg-success',
+  accepted: 'bg-success',
+  declined: 'bg-destructive',
+};
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,8 +142,11 @@ const JobDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
@@ -149,7 +154,7 @@ const JobDetails = () => {
   if (!job) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Job not found</p>
+        <p className="text-sm text-muted-foreground">Job not found</p>
       </div>
     );
   }
@@ -158,132 +163,133 @@ const JobDetails = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-14">
         <Button
           variant="ghost"
+          size="sm"
           onClick={() => navigate('/dashboard')}
-          className="mb-6 text-muted-foreground hover:text-foreground"
+          className="mb-5 -ml-2 text-xs text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
+          <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+          Back to Pipeline
         </Button>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="glass rounded-xl p-8 animate-fade-in">
+            {/* Header Card */}
+            <div className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 text-primary">
-                    <Building2 className="w-8 h-8" />
-                  </div>
+                  <CompanyAvatar company={job.company} className="w-11 h-11 text-sm" />
                   <div>
-                    <h1 className="text-2xl font-bold text-foreground mb-1">{job.position}</h1>
-                    <p className="text-lg text-muted-foreground mb-3">{job.company}</p>
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                      {job.position}
+                    </h1>
+                    <p className="text-sm text-muted-foreground mt-0.5 mb-3">{job.company}</p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={getStatusVariant(job.status)} className="text-sm">
+                      <Badge variant={job.status}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[job.status]}`} />
                         {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                       </Badge>
                       {job.priority && job.priority !== 'medium' && (
-                        <Badge variant={job.priority} className="text-sm">
+                        <Badge variant={job.priority}>
                           {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)} Priority
                         </Badge>
                       )}
                       {job.jobType && (
-                        <Badge variant={job.jobType} className="text-sm">
+                        <Badge variant={job.jobType}>
                           {job.jobType.charAt(0).toUpperCase() + job.jobType.slice(1)}
                         </Badge>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowReminderForm(true)}
-                    className="text-muted-foreground hover:text-warning"
-                    title="Set Reminder"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowReminderForm((prev) => !prev)}
+                    className="h-8 text-xs"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell className="w-3.5 h-3.5 mr-1.5" />
+                    Remind
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsEditModalOpen(true)}
-                    className="text-muted-foreground hover:text-primary"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     title="Edit Job"
                   >
-                    <Edit2 className="w-5 h-5" />
+                    <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
                     title="Delete Job"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="glass rounded-xl p-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-primary" />
-                Job Details
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-6">
+            {/* Metadata Grid */}
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h2 className="text-sm font-semibold text-foreground mb-5">Details</h2>
+              <div className="grid sm:grid-cols-2 gap-5 text-sm">
                 {job.location && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="text-foreground font-medium">{job.location}</p>
+                      <p className="text-xs text-muted-foreground">Location</p>
+                      <p className="text-foreground font-medium mt-0.5">{job.location}</p>
                     </div>
                   </div>
                 )}
                 {job.salary && (
                   <div className="flex items-start gap-3">
-                    <DollarSign className="w-4 h-4 text-muted-foreground mt-1" />
+                    <DollarSign className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Salary</p>
-                      <p className="text-foreground font-medium">{job.salary}</p>
+                      <p className="text-xs text-muted-foreground">Compensation</p>
+                      <p className="font-mono text-foreground font-medium mt-0.5">{job.salary}</p>
                     </div>
                   </div>
                 )}
                 {job.appliedDate && (
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-4 h-4 text-muted-foreground mt-1" />
+                    <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Applied Date</p>
-                      <p className="text-foreground font-medium">
-                        {format(new Date(job.appliedDate), 'MMMM d, yyyy')}
+                      <p className="text-xs text-muted-foreground">Applied Date</p>
+                      <p className="font-mono text-foreground font-medium mt-0.5">
+                        {format(new Date(job.appliedDate), 'MMM d, yyyy')}
                       </p>
                     </div>
                   </div>
                 )}
                 {job.interviewDate && (
                   <div className="flex items-start gap-3">
-                    <Calendar className="w-4 h-4 text-info mt-1" />
+                    <Calendar className="w-4 h-4 text-info mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Interview Date</p>
-                      <p className="text-info font-medium">
-                        {format(new Date(job.interviewDate), 'MMMM d, yyyy')}
+                      <p className="text-xs text-muted-foreground">Interview Date</p>
+                      <p className="font-mono text-info font-medium mt-0.5">
+                        {format(new Date(job.interviewDate), 'MMM d, yyyy')}
                       </p>
                     </div>
                   </div>
                 )}
                 {job.jobUrl && (
                   <div className="flex items-start gap-3 sm:col-span-2">
-                    <ExternalLink className="w-4 h-4 text-muted-foreground mt-1" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Job URL</p>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Posting URL</p>
                       <a
                         href={job.jobUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline font-medium"
+                        className="text-foreground underline underline-offset-4 hover:text-accent font-medium break-all"
                       >
                         {job.jobUrl}
                       </a>
@@ -293,16 +299,13 @@ const JobDetails = () => {
               </div>
 
               {job.tags && job.tags.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Tags</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mt-5 pt-5 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-2.5">Tags</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {job.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3 py-1 text-sm bg-secondary rounded-full text-secondary-foreground"
+                        className="font-mono text-xs px-2.5 py-0.5 bg-secondary rounded-md text-secondary-foreground"
                       >
                         {tag}
                       </span>
@@ -312,19 +315,22 @@ const JobDetails = () => {
               )}
 
               {(job.contactName || job.contactEmail) && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h3 className="text-sm font-medium text-foreground mb-4">Contact Information</h3>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                <div className="mt-5 pt-5 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3">Contact</p>
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     {job.contactName && (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-foreground">{job.contactName}</span>
                       </div>
                     )}
                     {job.contactEmail && (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a href={`mailto:${job.contactEmail}`} className="text-primary hover:underline">
+                        <a
+                          href={`mailto:${job.contactEmail}`}
+                          className="text-foreground underline underline-offset-4"
+                        >
                           {job.contactEmail}
                         </a>
                       </div>
@@ -334,60 +340,63 @@ const JobDetails = () => {
               )}
 
               {job.description && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h3 className="text-sm font-medium text-foreground mb-3">Description</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{job.description}</p>
+                <div className="mt-5 pt-5 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Description</p>
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                    {job.description}
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="glass rounded-xl p-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Notes ({notes.length})
+            {/* Notes Section */}
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h2 className="text-sm font-semibold text-foreground mb-4">
+                Notes <span className="font-mono text-muted-foreground">({notes.length})</span>
               </h2>
 
-              <div className="flex gap-2 mb-4">
+              <div className="space-y-3 mb-5">
                 <Textarea
-                  placeholder="Add a note..."
+                  placeholder="Write an interview note, recruiter feedback, or prep checklist..."
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
-                  className="min-h-[80px] bg-secondary/50 border-border"
+                  className="min-h-[84px] bg-background"
                 />
+                <Button
+                  onClick={handleAddNote}
+                  disabled={addNoteMutation.isPending || !newNote.trim()}
+                  size="sm"
+                >
+                  {addNoteMutation.isPending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5 mr-1.5" />
+                  )}
+                  Add Note
+                </Button>
               </div>
-              <Button
-                onClick={handleAddNote}
-                disabled={addNoteMutation.isPending || !newNote.trim()}
-                size="sm"
-                className="mb-6"
-              >
-                {addNoteMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <Send className="w-4 h-4 mr-2" />
-                )}
-                Add Note
-              </Button>
 
-              <div className="space-y-3">
+              <div className="divide-y divide-border border-t border-border">
                 {notes.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No notes yet</p>
+                  <p className="text-muted-foreground text-xs pt-4">No notes yet</p>
                 ) : (
                   [...notes].reverse().map((note) => (
-                    <div key={note._id} className="p-4 bg-secondary/30 rounded-lg group">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-foreground whitespace-pre-wrap flex-1">{note.text}</p>
+                    <div key={note._id} className="py-3.5 group">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm text-foreground whitespace-pre-wrap flex-1">
+                          {note.text}
+                        </p>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteNote(note._id)}
-                          className="opacity-0 group-hover:opacity-100 h-8 w-8 text-muted-foreground hover:text-destructive"
+                          className="opacity-0 group-hover:opacity-100 h-7 w-7 text-muted-foreground hover:text-destructive"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {format(new Date(note.createdAt), 'MMM d, yyyy h:mm a')}
+                      <p className="font-mono text-[11px] text-muted-foreground mt-1.5">
+                        {format(new Date(note.createdAt), 'MMM d, yyyy · h:mm a')}
                       </p>
                     </div>
                   ))
@@ -396,16 +405,19 @@ const JobDetails = () => {
             </div>
           </div>
 
+          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {showReminderForm && (
-              <div className="glass rounded-xl p-6 animate-scale-in">
+              <div className="rounded-xl border border-border bg-card p-5 animate-scale-in">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-warning" />
-                    Set Reminder
-                  </h2>
-                  <Button variant="ghost" size="icon" onClick={() => setShowReminderForm(false)}>
-                    <X className="w-4 h-4" />
+                  <h2 className="text-sm font-semibold text-foreground">Set Reminder</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setShowReminderForm(false)}
+                  >
+                    <X className="w-3.5 h-3.5" />
                   </Button>
                 </div>
                 <div className="space-y-3">
@@ -413,55 +425,52 @@ const JobDetails = () => {
                     type="datetime-local"
                     value={reminderDate}
                     onChange={(e) => setReminderDate(e.target.value)}
-                    className="bg-secondary/50"
+                    className="bg-background"
                   />
                   <Input
                     placeholder="Optional note..."
                     value={reminderNote}
                     onChange={(e) => setReminderNote(e.target.value)}
-                    className="bg-secondary/50"
+                    className="bg-background"
                   />
                   <Button
                     onClick={handleSetReminder}
                     disabled={createReminderMutation.isPending || !reminderDate}
                     className="w-full"
+                    size="sm"
                   >
                     {createReminderMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
                     ) : (
-                      <Bell className="w-4 h-4 mr-2" />
+                      <Bell className="w-3.5 h-3.5 mr-1.5" />
                     )}
-                    Set Reminder
+                    Save Reminder
                   </Button>
                 </div>
               </div>
             )}
 
-            <div className="glass rounded-xl p-6 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-              <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
-                Timeline
-              </h2>
-              <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h2 className="text-sm font-semibold text-foreground mb-5">Timeline</h2>
+              <div className="space-y-5">
                 {timeline.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No timeline events</p>
+                  <p className="text-muted-foreground text-xs">No timeline events</p>
                 ) : (
                   timeline.map((event, index) => (
-                    <div key={event._id} className="relative flex gap-4">
+                    <div key={event._id} className="relative flex gap-3.5">
                       {index < timeline.length - 1 && (
-                        <div className="absolute left-5 top-10 w-0.5 h-full bg-border" />
+                        <div className="absolute left-[7px] top-4 bottom-[-20px] w-px bg-border" />
                       )}
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary shrink-0">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0 pb-2">
-                        <p className="font-medium text-foreground">{event.event}</p>
+                      <div className="mt-1.5 w-3.5 h-3.5 rounded-full border-2 border-foreground bg-background shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{event.event}</p>
                         {event.description && (
-                          <p className="text-sm text-muted-foreground">{event.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {event.description}
+                          </p>
                         )}
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {format(new Date(event.date), 'MMM d, yyyy h:mm a')}
+                        <p className="font-mono text-[11px] text-muted-foreground mt-1">
+                          {format(new Date(event.date), 'MMM d, yyyy · h:mm a')}
                         </p>
                       </div>
                     </div>

@@ -68,11 +68,11 @@ export const AdvancedFilters = ({
           value={filters.status || 'all'}
           onValueChange={(v) => onChange({ ...filters, status: v as JobStatus | 'all', page: 1 })}
         >
-          <SelectTrigger className="w-[130px] glass h-9 text-sm">
+          <SelectTrigger className="w-[128px] bg-card h-9 text-xs">
             <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-card border-border">
+          <SelectContent className="bg-popover border-border">
             {statusOptions.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
@@ -86,11 +86,11 @@ export const AdvancedFilters = ({
         value={filters.jobType || 'all'}
         onValueChange={(v) => onChange({ ...filters, jobType: v as JobType | 'all', page: 1 })}
       >
-        <SelectTrigger className="w-[120px] glass h-9 text-sm">
+        <SelectTrigger className="w-[116px] bg-card h-9 text-xs">
           <MapPin className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="bg-card border-border">
+        <SelectContent className="bg-popover border-border">
           {jobTypeOptions.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
@@ -103,11 +103,11 @@ export const AdvancedFilters = ({
         value={filters.priority || 'all'}
         onValueChange={(v) => onChange({ ...filters, priority: v as Priority | 'all', page: 1 })}
       >
-        <SelectTrigger className="w-[130px] glass h-9 text-sm">
+        <SelectTrigger className="w-[126px] bg-card h-9 text-xs">
           <AlertCircle className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="bg-card border-border">
+        <SelectContent className="bg-popover border-border">
           {priorityOptions.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
@@ -120,11 +120,11 @@ export const AdvancedFilters = ({
         value={filters.sort || '-createdAt'}
         onValueChange={(v) => onChange({ ...filters, sort: v })}
       >
-        <SelectTrigger className="w-[150px] glass h-9 text-sm">
+        <SelectTrigger className="w-[144px] bg-card h-9 text-xs">
           <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="bg-card border-border">
+        <SelectContent className="bg-popover border-border">
           {sortOptions.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
@@ -138,9 +138,9 @@ export const AdvancedFilters = ({
           variant="ghost"
           size="sm"
           onClick={onReset}
-          className="h-9 text-muted-foreground hover:text-foreground"
+          className="h-9 text-xs text-muted-foreground hover:text-foreground"
         >
-          <X className="w-4 h-4 mr-1" />
+          <X className="w-3.5 h-3.5 mr-1" />
           Reset
         </Button>
       )}

@@ -14,7 +14,7 @@ export const ThemeToggle = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Button variant="ghost" size="icon" className="h-8 w-8">
           {resolvedTheme === 'dark' ? (
             <Moon className="w-4 h-4" />
           ) : (
@@ -23,24 +23,24 @@ export const ThemeToggle = () => {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass border-border">
-        <DropdownMenuItem 
+      <DropdownMenuContent align="end" className="bg-popover border-border shadow-md">
+        <DropdownMenuItem
           onClick={() => setTheme('light')}
-          className={theme === 'light' ? 'bg-secondary' : ''}
+          className={theme === 'light' ? 'bg-secondary font-medium' : ''}
         >
           <Sun className="w-4 h-4 mr-2" />
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => setTheme('dark')}
-          className={theme === 'dark' ? 'bg-secondary' : ''}
+          className={theme === 'dark' ? 'bg-secondary font-medium' : ''}
         >
           <Moon className="w-4 h-4 mr-2" />
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => setTheme('system')}
-          className={theme === 'system' ? 'bg-secondary' : ''}
+          className={theme === 'system' ? 'bg-secondary font-medium' : ''}
         >
           <Monitor className="w-4 h-4 mr-2" />
           System

@@ -1,7 +1,9 @@
 import { Job, JobStatus } from '@/types/job';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Edit2, Trash2, Building2, ChevronRight, MapPin, Briefcase, AlertCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CompanyAvatar } from '@/components/CompanyAvatar';
+import { Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,10 +12,16 @@ interface JobCardProps {
   onEdit: (job: Job) => void;
   onDelete: (id: string) => void;
   index: number;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-const getStatusVariant = (status: JobStatus): "pending" | "interview" | "declined" | "offer" | "accepted" => {
-  return status;
+const STATUS_DOT: Record<JobStatus, string> = {
+  pending: 'bg-warning',
+  interview: 'bg-info',
+  offer: 'bg-success',
+  accepted: 'bg-success',
+  declined: 'bg-destructive',
 };
 
 const getStatusLabel = (status: JobStatus): string => {
@@ -27,95 +35,117 @@ const getStatusLabel = (status: JobStatus): string => {
   return labels[status] || status;
 };
 
-export const JobCard = ({ job, onEdit, onDelete, index }: JobCardProps) => {
+export const JobCard = ({
+  job,
+  onEdit,
+  onDelete,
+  selected,
+  onToggleSelect,
+}: JobCardProps) => {
   const navigate = useNavigate();
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on action buttons
-    if ((e.target as HTMLElement).closest('button')) return;
+  const handleRowClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="checkbox"]')) return;
     navigate(`/job/${job._id}`);
   };
 
   return (
     <div
-      className="group glass rounded-xl p-6 hover:border-primary/30 transition-all duration-300 animate-fade-in cursor-pointer"
-      style={{ animationDelay: `${index * 0.05}s` }}
-      onClick={handleCardClick}
+      onClick={handleRowClick}
+      className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3.5 hover:bg-secondary/35 transition-colors cursor-pointer"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                {job.position}
-              </h3>
-              <p className="text-sm text-muted-foreground truncate">{job.company}</p>
-            </div>
-          </div>
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        {onToggleSelect && (
+          <Checkbox
+            checked={selected}
+            onCheckedChange={() => onToggleSelect(job._id)}
+            aria-label={`Select ${job.position} at ${job.company}`}
+            className="shrink-0"
+          />
+        )}
 
-          <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              <span>{format(new Date(job.appliedDate || job.createdAt), 'MMM d, yyyy')}</span>
-            </div>
+        <CompanyAvatar company={job.company} />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium text-foreground truncate group-hover:underline underline-offset-4">
+              {job.position}
+            </h3>
+            {job.priority === 'high' && (
+              <Badge variant="high" className="text-[10px] px-1.5 py-0">
+                High
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+            <span className="font-medium text-foreground/80">{job.company}</span>
             {job.location && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[100px]">{job.location}</span>
-              </div>
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="truncate max-w-[160px]">{job.location}</span>
+              </>
             )}
             {job.jobType && (
-              <Badge variant={job.jobType} className="text-[10px] px-2 py-0.5">
-                {job.jobType.charAt(0).toUpperCase() + job.jobType.slice(1)}
-              </Badge>
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="capitalize">{job.jobType}</span>
+              </>
             )}
-            {job.priority && job.priority !== 'medium' && (
-              <Badge variant={job.priority} className="text-[10px] px-2 py-0.5">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                {job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}
-              </Badge>
-            )}
-            <Badge variant={getStatusVariant(job.status)}>
-              {getStatusLabel(job.status)}
-            </Badge>
           </div>
-          {job.tags && job.tags.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              {job.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="text-[10px] px-2 py-0.5 bg-secondary rounded-full text-secondary-foreground">
-                  {tag}
-                </span>
-              ))}
-              {job.tags.length > 3 && (
-                <span className="text-[10px] text-muted-foreground">+{job.tags.length - 3} more</span>
-              )}
-            </div>
-          )}
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(job)}
-              className="h-9 w-9 text-muted-foreground hover:text-primary"
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(job._id)}
-              className="h-9 w-9 text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+      <div className="flex items-center justify-between sm:justify-end gap-4 pl-10 sm:pl-0 shrink-0">
+        {job.tags && job.tags.length > 0 && (
+          <div className="hidden xl:flex items-center gap-1">
+            {job.tags.slice(0, 2).map((tag) => (
+              <span
+                key={tag}
+                className="text-[11px] font-mono px-2 py-0.5 bg-secondary rounded text-muted-foreground"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        )}
+
+        {job.salary && (
+          <span className="hidden md:inline font-mono text-xs text-muted-foreground tabular-nums">
+            {job.salary}
+          </span>
+        )}
+
+        <Badge variant={job.status} className="min-w-[88px] justify-start">
+          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[job.status]}`} />
+          {getStatusLabel(job.status)}
+        </Badge>
+
+        <span className="font-mono text-xs text-muted-foreground tabular-nums w-20 text-right hidden sm:inline">
+          {format(new Date(job.appliedDate || job.createdAt), 'MMM d, yy')}
+        </span>
+
+        <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Edit ${job.position}`}
+            onClick={() => onEdit(job)}
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Delete ${job.position}`}
+            onClick={() => onDelete(job._id)}
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </div>
     </div>

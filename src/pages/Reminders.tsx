@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format, isFuture, isPast } from 'date-fns';
-import { Bell, Building2, Calendar, CheckCircle2, Clock, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { Bell, CheckCircle2, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { useDeleteReminder, useReminders, useUpdateReminder } from '@/hooks/useReminders';
 import { Reminder } from '@/types/reminder';
+import { CompanyAvatar } from '@/components/CompanyAvatar';
 import { Navbar } from '@/components/Navbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,8 +52,11 @@ const Reminders = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
@@ -61,11 +65,13 @@ const Reminders = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-3xl">
-        <div className="flex items-center justify-between mb-8 animate-fade-in">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-14">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Reminders</h1>
-            <p className="text-muted-foreground">Stay on top of your job applications</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reminders</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Scheduled follow-ups across your applications
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Switch
@@ -73,32 +79,35 @@ const Reminders = () => {
               checked={includePast}
               onCheckedChange={setIncludePast}
             />
-            <Label htmlFor="include-past" className="text-sm text-muted-foreground">
+            <Label htmlFor="include-past" className="text-xs text-muted-foreground">
               Show past & done
             </Label>
           </div>
         </div>
 
         {reminders.length === 0 ? (
-          <div className="glass rounded-xl p-12 text-center animate-fade-in">
-            <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">No reminders</h2>
-            <p className="text-muted-foreground mb-4">
-              Set reminders on job applications to stay organized
+          <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
+            <div className="mx-auto w-10 h-10 rounded-lg border border-border bg-secondary flex items-center justify-center mb-3">
+              <Bell className="w-4 h-4 text-foreground" />
+            </div>
+            <h2 className="text-base font-semibold text-foreground mb-1">No reminders</h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              Open any application to schedule a follow-up reminder.
             </p>
-            <Button onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+            <Button size="sm" onClick={() => navigate('/dashboard')}>
+              Go to Pipeline
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {upcomingReminders.length > 0 && (
-              <div className="animate-fade-in">
-                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-warning" />
+              <div>
+                <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2.5">
                   Upcoming ({upcomingReminders.length})
                 </h2>
-                <div className="space-y-3">
+                <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
                   {upcomingReminders.map((reminder) => (
-                    <ReminderCard
+                    <ReminderRow
                       key={reminder._id}
                       reminder={reminder}
                       onToggleDone={handleToggleDone}
@@ -110,14 +119,13 @@ const Reminders = () => {
             )}
 
             {pastOrDoneReminders.length > 0 && (
-              <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                <h2 className="text-lg font-semibold text-muted-foreground mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+              <div>
+                <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2.5">
                   Completed / Past ({pastOrDoneReminders.length})
                 </h2>
-                <div className="space-y-3 opacity-75">
+                <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden opacity-75">
                   {pastOrDoneReminders.map((reminder) => (
-                    <ReminderCard
+                    <ReminderRow
                       key={reminder._id}
                       reminder={reminder}
                       onToggleDone={handleToggleDone}
@@ -135,84 +143,72 @@ const Reminders = () => {
   );
 };
 
-interface ReminderCardProps {
+interface ReminderRowProps {
   reminder: Reminder;
   onToggleDone: (reminder: Reminder) => void;
   onDelete: (id: string) => void;
   isPastOrDone?: boolean;
 }
 
-const ReminderCard = ({
+const ReminderRow = ({
   reminder,
   onToggleDone,
   onDelete,
   isPastOrDone,
-}: ReminderCardProps) => {
+}: ReminderRowProps) => {
   if (!reminder.job) return null;
   const isDone = reminder.status === 'done';
 
   return (
-    <div className="glass rounded-xl p-5 group">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1">
-          <div
-            className={`flex items-center justify-center w-12 h-12 rounded-xl ${
-              isDone ? 'bg-success/10' : isPastOrDone ? 'bg-muted' : 'bg-warning/10'
-            }`}
-          >
-            {isDone ? (
-              <CheckCircle2 className="w-5 h-5 text-success" />
-            ) : (
-              <Bell
-                className={`w-5 h-5 ${isPastOrDone ? 'text-muted-foreground' : 'text-warning'}`}
-              />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
+    <div className="px-4 py-3.5 group hover:bg-secondary/35 transition-colors flex items-start justify-between gap-4">
+      <div className="flex items-start gap-3.5 min-w-0 flex-1">
+        <CompanyAvatar company={reminder.job.company} className="mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               to={`/job/${reminder.job._id}`}
-              className={`font-semibold transition-colors hover:text-primary ${
+              className={`text-sm font-medium hover:underline underline-offset-4 ${
                 isDone ? 'line-through text-muted-foreground' : 'text-foreground'
               }`}
             >
               {reminder.job.position}
             </Link>
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-              <Building2 className="w-3.5 h-3.5" />
-              {reminder.job.company}
-            </p>
-            {reminder.note && (
-              <p className="text-sm text-muted-foreground mt-2 italic">"{reminder.note}"</p>
-            )}
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              <Badge variant={isDone ? 'success' : isPastOrDone ? 'secondary' : 'pending'} className="text-xs">
-                <Calendar className="w-3 h-3 mr-1" />
-                {format(new Date(reminder.remindAt), 'MMM d, yyyy h:mm a')}
-              </Badge>
-              <Badge variant={reminder.job.status}>{reminder.job.status}</Badge>
-            </div>
+            <span className="text-xs text-muted-foreground">· {reminder.job.company}</span>
+          </div>
+          {reminder.note && (
+            <p className="text-xs text-muted-foreground mt-1">{reminder.note}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <Badge
+              variant={isDone ? 'success' : isPastOrDone ? 'secondary' : 'pending'}
+              className="font-mono text-[11px]"
+            >
+              {format(new Date(reminder.remindAt), 'MMM d, yyyy · h:mm a')}
+            </Badge>
+            <Badge variant={reminder.job.status}>{reminder.job.status}</Badge>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleDone(reminder)}
-            title={isDone ? 'Reopen reminder' : 'Mark as done'}
-            className="text-muted-foreground hover:text-success"
-          >
-            {isDone ? <RotateCcw className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(reminder._id)}
-            title="Delete reminder"
-            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onToggleDone(reminder)}
+          title={isDone ? 'Reopen reminder' : 'Mark as done'}
+          className="h-8 w-8 text-muted-foreground hover:text-success"
+        >
+          {isDone ? <RotateCcw className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(reminder._id)}
+          title="Delete reminder"
+          className="h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
