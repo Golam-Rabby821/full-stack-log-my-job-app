@@ -1,43 +1,63 @@
-import { 
-  AuthResponse, 
-  LoginData, 
-  RegisterData, 
-  Job, 
-  JobsResponse, 
-  CreateJobData, 
+import {
+  AuthResponse,
+  LoginData,
+  RegisterData,
+  Job,
+  JobsResponse,
+  CreateJobData,
   UpdateJobData,
   JobFilters,
   UserProfile,
   UpdateProfileData,
   ChangePasswordData,
   Note,
-  TimelineEvent
+  TimelineEvent,
 } from '@/types/job';
 import { AnalyticsOverview, AnalyticsTrends, AnalyticsMonthly } from '@/types/analytics';
-import { Reminder, CreateReminderData } from '@/types/reminder';
+import { Reminder, CreateReminderData, UpdateReminderData } from '@/types/reminder';
 
-const API_BASE_URL = 'https://jobs-api-03hd.onrender.com/api/v1';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://jobs-api-03hd.onrender.com/api/v1';
+
+let unauthorizedHandler: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null): void => {
+  unauthorizedHandler = handler;
+};
 
 const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('token');
   return {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
 
-const handleResponse = async <T>(response: Response): Promise<T> => {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
-    throw new Error(error.msg || 'An error occurred');
+const parseErrorAndThrow = async (response: Response, skipAuthRedirect = false): Promise<never> => {
+  const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
+  if (response.status === 401 && !skipAuthRedirect && unauthorizedHandler) {
+    unauthorizedHandler();
   }
-  return response.json();
+  throw new Error(error.msg || 'An error occurred');
+};
+
+const handleResponse = async <T>(response: Response, skipAuthRedirect = false): Promise<T> => {
+  if (!response.ok) {
+    return parseErrorAndThrow(response, skipAuthRedirect);
+  }
+  return response.json() as Promise<T>;
+};
+
+const handleVoidResponse = async (response: Response, skipAuthRedirect = false): Promise<void> => {
+  if (!response.ok) {
+    await parseErrorAndThrow(response, skipAuthRedirect);
+  }
 };
 
 // Build query string from filters
 const buildQueryString = (filters: JobFilters): string => {
   const params = new URLSearchParams();
-  
+
   if (filters.status && filters.status !== 'all') {
     params.append('status', filters.status);
   }
@@ -65,7 +85,7 @@ const buildQueryString = (filters: JobFilters): string => {
   if (filters.limit) {
     params.append('limit', filters.limit.toString());
   }
-  
+
   const queryString = params.toString();
   return queryString ? `?${queryString}` : '';
 };
@@ -78,7 +98,7 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return handleResponse<AuthResponse>(response);
+    return handleResponse<AuthResponse>(response, true);
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {
@@ -87,7 +107,23 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return handleResponse<AuthResponse>(response);
+    return handleResponse<AuthResponse>(response, true);
+  },
+
+  demoLogin: async (): Promise<AuthResponse> => {
+    const response = await fetch(`${API_BASE_URL}/auth/demo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return handleResponse<AuthResponse>(response, true);
+  },
+
+  resetDemo: async (): Promise<{ msg: string }> => {
+    const response = await fetch(`${API_BASE_URL}/auth/demo/reset`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse<{ msg: string }>(response);
   },
 
   getMe: async (): Promise<{ user: UserProfile }> => {
@@ -164,38 +200,36 @@ export const jobsApi = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
-      throw new Error(error.msg || 'An error occurred');
-    }
+    await handleVoidResponse(response);
   },
 
-  // Bulk operations
-  bulkDelete: async (ids: string[]): Promise<{ msg: string; deletedCount: number }> => {
+  bulkDelete: async (ids: string[]): Promise<{ deletedCount: number }> => {
     const response = await fetch(`${API_BASE_URL}/jobs/bulk-delete`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids }),
     });
-    return handleResponse<{ msg: string; deletedCount: number }>(response);
+    return handleResponse<{ deletedCount: number }>(response);
   },
 
-  bulkUpdate: async (ids: string[], data: { status?: string; priority?: string }): Promise<{ msg: string; modifiedCount: number }> => {
+  bulkUpdate: async (
+    ids: string[],
+    data: { status?: string; priority?: string }
+  ): Promise<{ matchedCount: number; modifiedCount: number }> => {
     const response = await fetch(`${API_BASE_URL}/jobs/bulk-update`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ ids, ...data }),
     });
-    return handleResponse<{ msg: string; modifiedCount: number }>(response);
+    return handleResponse<{ matchedCount: number; modifiedCount: number }>(response);
   },
 
-  // Export
   exportCsv: async (): Promise<Blob> => {
     const response = await fetch(`${API_BASE_URL}/jobs/export/csv`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Failed to export CSV');
+      await parseErrorAndThrow(response);
     }
     return response.blob();
   },
@@ -205,7 +239,7 @@ export const jobsApi = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) {
-      throw new Error('Failed to export PDF');
+      await parseErrorAndThrow(response);
     }
     return response.blob();
   },
@@ -220,13 +254,13 @@ export const notesApi = {
     return handleResponse<{ notes: Note[] }>(response);
   },
 
-  add: async (jobId: string, text: string): Promise<{ note: Note }> => {
+  add: async (jobId: string, text: string): Promise<{ note: Note; notes: Note[] }> => {
     const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/notes`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ text }),
     });
-    return handleResponse<{ note: Note }>(response);
+    return handleResponse<{ note: Note; notes: Note[] }>(response);
   },
 
   delete: async (jobId: string, noteId: string): Promise<void> => {
@@ -234,10 +268,7 @@ export const notesApi = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
-      throw new Error(error.msg || 'An error occurred');
-    }
+    await handleVoidResponse(response);
   },
 };
 
@@ -250,13 +281,16 @@ export const timelineApi = {
     return handleResponse<{ timeline: TimelineEvent[] }>(response);
   },
 
-  add: async (jobId: string, data: { event: string; description?: string; date?: string }): Promise<{ event: TimelineEvent }> => {
+  add: async (
+    jobId: string,
+    data: { event: string; description?: string; date?: string }
+  ): Promise<{ timeline: TimelineEvent[] }> => {
     const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/timeline`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-    return handleResponse<{ event: TimelineEvent }>(response);
+    return handleResponse<{ timeline: TimelineEvent[] }>(response);
   },
 };
 
@@ -303,14 +337,20 @@ export const remindersApi = {
     return handleResponse<{ reminder: Reminder }>(response);
   },
 
+  update: async (reminderId: string, data: UpdateReminderData): Promise<{ reminder: Reminder }> => {
+    const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse<{ reminder: Reminder }>(response);
+  },
+
   delete: async (reminderId: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/reminders/${reminderId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ msg: 'An error occurred' }));
-      throw new Error(error.msg || 'An error occurred');
-    }
+    await handleVoidResponse(response);
   },
 };

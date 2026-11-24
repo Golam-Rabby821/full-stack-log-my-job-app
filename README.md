@@ -1,113 +1,58 @@
-# LogMyJobs Frontend
+# LogMyJobs Web
 
-A React + TypeScript frontend for managing job applications, interviews, and follow-ups.
+A React + strict TypeScript frontend for managing job applications, interviews, follow-up reminders, and conversion analytics.
 
-## Overview
+## Key Features
+- **One-Click Live Demo:** Instant demo login with ~18 realistic seeded applications, notes, timelines, and reminders — plus a one-click **Reset** button.
+- **List & Kanban Pipeline Views:** Drag-and-drop applications across stages (`Pending → Interview → Offer → Accepted → Declined`) with optimistic TanStack Query updates.
+- **Command Palette (`Ctrl+K` / `Cmd+K`):** Quick keyboard navigation, theme switching, and account actions powered by `cmdk`.
+- **Server-Side Filtering & Bulk Actions:** Debounced search, status/type/priority filtering, sorting, pagination, and multi-select bulk updates.
+- **Follow-Up Reminders & Timeline:** Per-job notes, automatic status-change timelines, and reminders with mark-done / reopen controls.
+- **Conversion Funnel Analytics:** Interview rate, offer rate, weekly application velocity, stale pending alerts, and interactive Recharts visualizations.
+- **Data Export:** One-click CSV and formatted multi-page PDF report exports.
 
-This repository contains the **frontend application only**.
-The backend API is maintained in a **separate repository/folder** and is not included here.
-
-## Core Features
-
-- Authentication: register, login, profile update, password update, account deletion
-- Job management: create, read, update, delete applications
-- Job organization: filter, search, sort, and paginate records
-- Collaboration context: notes and timeline per job
-- Follow-up workflow: reminder creation and tracking
-- Analytics views: overview, trends, and monthly breakdown
-- Data export: CSV and PDF
-
-## Technology Stack
-
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- shadcn/ui + Radix UI
-- TanStack Query
-- React Router
-
-## Project Scope
-
-- Frontend: `react-jobs-app-main` (this repository)
-- Backend: separate repository/folder (required for full local development)
-
-## API Configuration
-
-API integration is centralized in `src/lib/api.ts`.
-
-Current base URL:
-
-```ts
-const API_BASE_URL = 'https://jobs-api-03hd.onrender.com/api/v1';
-```
-
-For local full-stack development, update this value to your backend service URL from the separate backend project.
+## Tech Stack
+- **Framework:** React 18, TypeScript (`strict: true`), Vite
+- **State & Caching:** TanStack Query v5 + React Context
+- **Forms & Validation:** React Hook Form + Zod
+- **UI & Drag-and-Drop:** Tailwind CSS, Radix UI primitives, `@dnd-kit/core`, `cmdk`, `recharts`, `sonner`
+- **Testing & CI:** Vitest, React Testing Library, ESLint, GitHub Actions
 
 ## Local Development
 
-### Prerequisites
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- Node.js 18+
-- npm 9+
+2. **Configure API URL**
+   Copy `.env.example` to `.env` (defaults to the hosted API if omitted):
+   ```env
+   VITE_API_URL=http://localhost:5000/api/v1
+   ```
 
-### Install Dependencies
+3. **Run development server**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm install
-```
+4. **Verify typecheck, lint, tests, and production build**
+   ```bash
+   npm run typecheck
+   npm run lint
+   npm test
+   npm run build
+   ```
 
-### Start Development Server
-
-```bash
-npm run dev
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-### Lint
-
-```bash
-npm run lint
-```
-
-## Scripts
-
-- `npm run dev` - Start Vite development server
-- `npm run build` - Build production assets
-- `npm run build:dev` - Build in development mode
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint checks
-
-## Source Structure
-
+## Architecture
 ```text
 src/
-  components/   # Reusable UI and feature components
-  contexts/     # React context providers
-  hooks/        # Custom hooks
-  lib/          # API client and utilities
-  pages/        # Route-level pages
-  types/        # Shared TypeScript interfaces/types
+  components/   # Feature components (KanbanBoard, JobModal, CommandPalette, ProtectedRoute, ErrorBoundary)
+  contexts/     # AuthContext (with 401 session expiry handling) & ThemeContext
+  hooks/        # TanStack Query hooks (useJobs, useAnalytics, useReminders) & useDebounce
+  lib/          # Centralized API client & utilities
+  pages/        # Lazy-loaded route pages (Dashboard, Analytics, JobDetails, Reminders, Profile, Login, Register)
+  schemas/      # Zod validation schemas for forms
+  types/        # Shared TypeScript interfaces
+  test/         # Vitest + React Testing Library test suite
 ```
-
-## Deployment
-
-Build output is generated in `dist/` and can be deployed to any static hosting platform (e.g., Vercel, Netlify, Cloudflare Pages, GitHub Pages).
-
-Ensure the deployed frontend has network access to the backend API and correct CORS configuration.
-
-## Portfolio / Reviewer Note
-
-This repository demonstrates frontend architecture, UI, and client-side logic.
-Backend implementation is external and must be run or deployed independently.

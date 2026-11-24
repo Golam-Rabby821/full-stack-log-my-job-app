@@ -1,168 +1,144 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { jobsApi, notesApi, timelineApi, remindersApi } from '@/lib/api';
-import { Job, CreateJobData, JobStatus, Note, TimelineEvent } from '@/types/job';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import {
+  ArrowLeft,
+  Bell,
+  Briefcase,
+  Building2,
+  Calendar,
+  Clock,
+  DollarSign,
+  Edit2,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Mail,
+  MapPin,
+  Send,
+  Tag,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
+import {
+  useAddNote,
+  useDeleteJob,
+  useDeleteNote,
+  useJob,
+  useJobNotes,
+  useJobTimeline,
+  useUpdateJob,
+} from '@/hooks/useJobs';
+import { useCreateReminder } from '@/hooks/useReminders';
+import { CreateJobData, JobStatus } from '@/types/job';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { JobModal } from '@/components/JobModal';
 import { Navbar } from '@/components/Navbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { JobModal } from '@/components/JobModal';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { 
-  ArrowLeft, 
-  Building2, 
-  Briefcase, 
-  Calendar, 
-  Clock, 
-  Edit2, 
-  Trash2,
-  Loader2,
-  Plus,
-  FileText,
-  MapPin,
-  DollarSign,
-  ExternalLink,
-  User,
-  Mail,
-  Tag,
-  Bell,
-  Send,
-  X
-} from 'lucide-react';
 
 const getStatusVariant = (status: JobStatus): JobStatus => status;
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
-  const [job, setJob] = useState<Job | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data: jobData, isLoading, isError } = useJob(id);
+  const { data: notesData } = useJobNotes(id);
+  const { data: timelineData } = useJobTimeline(id);
+
+  const updateJobMutation = useUpdateJob();
+  const deleteJobMutation = useDeleteJob();
+  const addNoteMutation = useAddNote();
+  const deleteNoteMutation = useDeleteNote();
+  const createReminderMutation = useCreateReminder();
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [newNote, setNewNote] = useState('');
-  const [isAddingNote, setIsAddingNote] = useState(false);
   const [reminderDate, setReminderDate] = useState('');
   const [reminderNote, setReminderNote] = useState('');
   const [showReminderForm, setShowReminderForm] = useState(false);
-  const [isSettingReminder, setIsSettingReminder] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, authLoading, navigate]);
-
-  useEffect(() => {
-    if (isAuthenticated && id) {
-      fetchJobData();
-    }
-  }, [isAuthenticated, id]);
-
-  const fetchJobData = async () => {
-    if (!id) return;
-    try {
-      const [jobRes, notesRes, timelineRes] = await Promise.all([
-        jobsApi.getById(id),
-        notesApi.getAll(id).catch(() => ({ notes: [] })),
-        timelineApi.getAll(id).catch(() => ({ timeline: [] })),
-      ]);
-      setJob(jobRes.job);
-      setNotes(notesRes.notes || jobRes.job.notes || []);
-      setTimeline(timelineRes.timeline || jobRes.job.timeline || []);
-    } catch (error) {
+    if (isError) {
       toast.error('Failed to fetch job details');
       navigate('/dashboard');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isError, navigate]);
+
+  const job = jobData?.job;
+  const notes = notesData?.notes ?? job?.notes ?? [];
+  const timeline = timelineData?.timeline ?? job?.timeline ?? [];
 
   const handleUpdateJob = async (data: CreateJobData) => {
     if (!job) return;
-    setIsSaving(true);
     try {
-      const response = await jobsApi.update(job._id, data);
-      setJob(response.job);
+      await updateJobMutation.mutateAsync({ id: job._id, data });
       setIsEditModalOpen(false);
-      await fetchJobData(); // Refresh timeline
       toast.success('Job updated successfully!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update job');
-    } finally {
-      setIsSaving(false);
+      throw error;
     }
   };
 
   const handleDeleteJob = async () => {
     if (!job) return;
-    setIsDeleting(true);
     try {
-      await jobsApi.delete(job._id);
+      await deleteJobMutation.mutateAsync(job._id);
       toast.success('Job deleted successfully!');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete job');
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   const handleAddNote = async () => {
     if (!job || !newNote.trim()) return;
-    setIsAddingNote(true);
     try {
-      const response = await notesApi.add(job._id, newNote.trim());
-      setNotes([response.note, ...notes]);
+      await addNoteMutation.mutateAsync({ jobId: job._id, text: newNote.trim() });
       setNewNote('');
       toast.success('Note added');
-    } catch (error) {
+    } catch {
       toast.error('Failed to add note');
-    } finally {
-      setIsAddingNote(false);
     }
   };
 
   const handleDeleteNote = async (noteId: string) => {
     if (!job) return;
     try {
-      await notesApi.delete(job._id, noteId);
-      setNotes(notes.filter(n => n._id !== noteId));
+      await deleteNoteMutation.mutateAsync({ jobId: job._id, noteId });
       toast.success('Note deleted');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete note');
     }
   };
 
   const handleSetReminder = async () => {
     if (!job || !reminderDate) return;
-    setIsSettingReminder(true);
     try {
-      await remindersApi.create(job._id, { 
-        remindAt: reminderDate, 
-        note: reminderNote || undefined 
+      await createReminderMutation.mutateAsync({
+        jobId: job._id,
+        data: {
+          remindAt: reminderDate,
+          note: reminderNote || undefined,
+        },
       });
       toast.success('Reminder set');
       setShowReminderForm(false);
       setReminderDate('');
       setReminderNote('');
-    } catch (error) {
+    } catch {
       toast.error('Failed to set reminder');
-    } finally {
-      setIsSettingReminder(false);
     }
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -181,7 +157,7 @@ const JobDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 pt-24 pb-12">
         <Button
           variant="ghost"
@@ -193,9 +169,7 @@ const JobDetails = () => {
         </Button>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Job Header */}
             <div className="glass rounded-xl p-8 animate-fade-in">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
@@ -228,6 +202,7 @@ const JobDetails = () => {
                     size="icon"
                     onClick={() => setShowReminderForm(true)}
                     className="text-muted-foreground hover:text-warning"
+                    title="Set Reminder"
                   >
                     <Bell className="w-5 h-5" />
                   </Button>
@@ -236,6 +211,7 @@ const JobDetails = () => {
                     size="icon"
                     onClick={() => setIsEditModalOpen(true)}
                     className="text-muted-foreground hover:text-primary"
+                    title="Edit Job"
                   >
                     <Edit2 className="w-5 h-5" />
                   </Button>
@@ -244,6 +220,7 @@ const JobDetails = () => {
                     size="icon"
                     onClick={() => setShowDeleteConfirm(true)}
                     className="text-muted-foreground hover:text-destructive"
+                    title="Delete Job"
                   >
                     <Trash2 className="w-5 h-5" />
                   </Button>
@@ -251,7 +228,6 @@ const JobDetails = () => {
               </div>
             </div>
 
-            {/* Job Details */}
             <div className="glass rounded-xl p-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-primary" />
@@ -303,9 +279,9 @@ const JobDetails = () => {
                     <ExternalLink className="w-4 h-4 text-muted-foreground mt-1" />
                     <div>
                       <p className="text-sm text-muted-foreground">Job URL</p>
-                      <a 
-                        href={job.jobUrl} 
-                        target="_blank" 
+                      <a
+                        href={job.jobUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-medium"
                       >
@@ -316,7 +292,6 @@ const JobDetails = () => {
                 )}
               </div>
 
-              {/* Tags */}
               {job.tags && job.tags.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="flex items-center gap-2 mb-3">
@@ -325,7 +300,10 @@ const JobDetails = () => {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {job.tags.map((tag) => (
-                      <span key={tag} className="px-3 py-1 text-sm bg-secondary rounded-full text-secondary-foreground">
+                      <span
+                        key={tag}
+                        className="px-3 py-1 text-sm bg-secondary rounded-full text-secondary-foreground"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -333,7 +311,6 @@ const JobDetails = () => {
                 </div>
               )}
 
-              {/* Contact Info */}
               {(job.contactName || job.contactEmail) && (
                 <div className="mt-6 pt-6 border-t border-border">
                   <h3 className="text-sm font-medium text-foreground mb-4">Contact Information</h3>
@@ -356,7 +333,6 @@ const JobDetails = () => {
                 </div>
               )}
 
-              {/* Description */}
               {job.description && (
                 <div className="mt-6 pt-6 border-t border-border">
                   <h3 className="text-sm font-medium text-foreground mb-3">Description</h3>
@@ -365,14 +341,12 @@ const JobDetails = () => {
               )}
             </div>
 
-            {/* Notes Section */}
             <div className="glass rounded-xl p-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 Notes ({notes.length})
               </h2>
-              
-              {/* Add Note Form */}
+
               <div className="flex gap-2 mb-4">
                 <Textarea
                   placeholder="Add a note..."
@@ -381,22 +355,25 @@ const JobDetails = () => {
                   className="min-h-[80px] bg-secondary/50 border-border"
                 />
               </div>
-              <Button 
-                onClick={handleAddNote} 
-                disabled={isAddingNote || !newNote.trim()}
+              <Button
+                onClick={handleAddNote}
+                disabled={addNoteMutation.isPending || !newNote.trim()}
                 size="sm"
                 className="mb-6"
               >
-                {isAddingNote ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                {addNoteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
                 Add Note
               </Button>
 
-              {/* Notes List */}
               <div className="space-y-3">
                 {notes.length === 0 ? (
                   <p className="text-muted-foreground text-sm">No notes yet</p>
                 ) : (
-                  notes.map((note) => (
+                  [...notes].reverse().map((note) => (
                     <div key={note._id} className="p-4 bg-secondary/30 rounded-lg group">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-foreground whitespace-pre-wrap flex-1">{note.text}</p>
@@ -419,9 +396,7 @@ const JobDetails = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Reminder Form */}
             {showReminderForm && (
               <div className="glass rounded-xl p-6 animate-scale-in">
                 <div className="flex items-center justify-between mb-4">
@@ -446,19 +421,22 @@ const JobDetails = () => {
                     onChange={(e) => setReminderNote(e.target.value)}
                     className="bg-secondary/50"
                   />
-                  <Button 
-                    onClick={handleSetReminder} 
-                    disabled={isSettingReminder || !reminderDate}
+                  <Button
+                    onClick={handleSetReminder}
+                    disabled={createReminderMutation.isPending || !reminderDate}
                     className="w-full"
                   >
-                    {isSettingReminder ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
+                    {createReminderMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Bell className="w-4 h-4 mr-2" />
+                    )}
                     Set Reminder
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Timeline */}
             <div className="glass rounded-xl p-6 animate-fade-in" style={{ animationDelay: '0.15s' }}>
               <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary" />
@@ -495,13 +473,12 @@ const JobDetails = () => {
         </div>
       </main>
 
-      {/* Modals */}
       <JobModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateJob}
         job={job}
-        isLoading={isSaving}
+        isLoading={updateJobMutation.isPending}
       />
 
       <ConfirmDialog
@@ -510,7 +487,7 @@ const JobDetails = () => {
         onConfirm={handleDeleteJob}
         title="Delete Job"
         description="Are you sure you want to delete this job? This action cannot be undone."
-        isLoading={isDeleting}
+        isLoading={deleteJobMutation.isPending}
       />
     </div>
   );

@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Job, CreateJobData, JobStatus, JobType, Priority } from '@/types/job';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { Briefcase, FileText, Loader2, MapPin, User } from 'lucide-react';
+import { CreateJobData, Job, JobStatus, JobType, Priority } from '@/types/job';
+import { jobFormSchema, JobFormValues } from '@/schemas/forms';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,8 +24,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TagInput } from '@/components/TagInput';
-import { Loader2, Briefcase, MapPin, User, FileText } from 'lucide-react';
-import { format } from 'date-fns';
 
 interface JobModalProps {
   isOpen: boolean;
@@ -30,62 +33,102 @@ interface JobModalProps {
   isLoading?: boolean;
 }
 
-const initialFormData: CreateJobData = {
-  company: '',
-  position: '',
-  status: 'pending',
-  location: '',
-  jobType: undefined,
-  salary: '',
-  jobUrl: '',
-  description: '',
-  appliedDate: format(new Date(), 'yyyy-MM-dd'),
-  interviewDate: '',
-  priority: 'medium',
-  tags: [],
-  contactName: '',
-  contactEmail: '',
+const getDefaultValues = (job?: Job | null): JobFormValues => {
+  if (job) {
+    return {
+      company: job.company,
+      position: job.position,
+      status: job.status,
+      priority: job.priority || 'medium',
+      location: job.location || '',
+      jobType: job.jobType,
+      salary: job.salary || '',
+      jobUrl: job.jobUrl || '',
+      description: job.description || '',
+      appliedDate: job.appliedDate ? format(new Date(job.appliedDate), 'yyyy-MM-dd') : '',
+      interviewDate: job.interviewDate ? format(new Date(job.interviewDate), 'yyyy-MM-dd') : '',
+      tags: job.tags || [],
+      contactName: job.contactName || '',
+      contactEmail: job.contactEmail || '',
+    };
+  }
+
+  return {
+    company: '',
+    position: '',
+    status: 'pending',
+    priority: 'medium',
+    location: '',
+    jobType: undefined,
+    salary: '',
+    jobUrl: '',
+    description: '',
+    appliedDate: format(new Date(), 'yyyy-MM-dd'),
+    interviewDate: '',
+    tags: [],
+    contactName: '',
+    contactEmail: '',
+  };
 };
 
 export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModalProps) => {
-  const [formData, setFormData] = useState<CreateJobData>(initialFormData);
   const [activeTab, setActiveTab] = useState('basic');
 
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<JobFormValues>({
+    resolver: zodResolver(jobFormSchema),
+    defaultValues: getDefaultValues(job),
+  });
+
   useEffect(() => {
-    if (job) {
-      setFormData({
-        company: job.company,
-        position: job.position,
-        status: job.status,
-        location: job.location || '',
-        jobType: job.jobType,
-        salary: job.salary || '',
-        jobUrl: job.jobUrl || '',
-        description: job.description || '',
-        appliedDate: job.appliedDate ? format(new Date(job.appliedDate), 'yyyy-MM-dd') : '',
-        interviewDate: job.interviewDate ? format(new Date(job.interviewDate), 'yyyy-MM-dd') : '',
-        priority: job.priority || 'medium',
-        tags: job.tags || [],
-        contactName: job.contactName || '',
-        contactEmail: job.contactEmail || '',
-      });
-    } else {
-      setFormData(initialFormData);
+    if (isOpen) {
+      reset(getDefaultValues(job));
+      setActiveTab('basic');
     }
-    setActiveTab('basic');
-  }, [job, isOpen]);
+  }, [job, isOpen, reset]);
 
-  const handleChange = (field: keyof CreateJobData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const onFormSubmit = async (values: JobFormValues) => {
+    const payload: CreateJobData = job
+      ? {
+          // On edit, explicitly pass empty strings and [] so cleared optional fields are persisted
+          company: values.company,
+          position: values.position,
+          status: values.status,
+          priority: values.priority,
+          location: values.location,
+          jobType: values.jobType,
+          salary: values.salary,
+          jobUrl: values.jobUrl,
+          description: values.description,
+          appliedDate: values.appliedDate,
+          interviewDate: values.interviewDate,
+          tags: values.tags,
+          contactName: values.contactName,
+          contactEmail: values.contactEmail,
+        }
+      : {
+          company: values.company,
+          position: values.position,
+          status: values.status,
+          priority: values.priority,
+          ...(values.location ? { location: values.location } : {}),
+          ...(values.jobType ? { jobType: values.jobType } : {}),
+          ...(values.salary ? { salary: values.salary } : {}),
+          ...(values.jobUrl ? { jobUrl: values.jobUrl } : {}),
+          ...(values.description ? { description: values.description } : {}),
+          ...(values.appliedDate ? { appliedDate: values.appliedDate } : {}),
+          ...(values.interviewDate ? { interviewDate: values.interviewDate } : {}),
+          ...(values.tags.length > 0 ? { tags: values.tags } : {}),
+          ...(values.contactName ? { contactName: values.contactName } : {}),
+          ...(values.contactEmail ? { contactEmail: values.contactEmail } : {}),
+        };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Clean up empty fields
-    const cleanData = Object.fromEntries(
-      Object.entries(formData).filter(([_, v]) => v !== '' && v !== undefined && (Array.isArray(v) ? v.length > 0 : true))
-    ) as CreateJobData;
-    await onSubmit(cleanData);
+    await onSubmit(payload);
     onClose();
   };
 
@@ -98,7 +141,7 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 mt-2" noValidate>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 bg-secondary/50">
               <TabsTrigger value="basic" className="gap-1.5 text-xs">
@@ -123,54 +166,60 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="company">Company *</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => handleChange('company', e.target.value)}
-                    placeholder="Company name"
-                    required
-                  />
+                  <Input id="company" placeholder="Company name" {...register('company')} />
+                  {errors.company && (
+                    <p className="text-xs text-destructive">{errors.company.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="position">Position *</Label>
-                  <Input
-                    id="position"
-                    value={formData.position}
-                    onChange={(e) => handleChange('position', e.target.value)}
-                    placeholder="Job title"
-                    required
-                  />
+                  <Input id="position" placeholder="Job title" {...register('position')} />
+                  {errors.position && (
+                    <p className="text-xs text-destructive">{errors.position.message}</p>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(v: JobStatus) => handleChange('status', v)}>
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="glass border-border">
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="interview">Interview</SelectItem>
-                      <SelectItem value="offer">Offer</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
-                      <SelectItem value="declined">Declined</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={(v) => field.onChange(v as JobStatus)}>
+                        <SelectTrigger className="bg-secondary/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="glass border-border">
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="interview">Interview</SelectItem>
+                          <SelectItem value="offer">Offer</SelectItem>
+                          <SelectItem value="accepted">Accepted</SelectItem>
+                          <SelectItem value="declined">Declined</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="priority">Priority</Label>
-                  <Select value={formData.priority || 'medium'} onValueChange={(v: Priority) => handleChange('priority', v)}>
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="glass border-border">
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="priority"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={(v) => field.onChange(v as Priority)}>
+                        <SelectTrigger className="bg-secondary/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="glass border-border">
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </div>
 
@@ -180,9 +229,8 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                   <Input
                     id="appliedDate"
                     type="date"
-                    value={formData.appliedDate || ''}
-                    onChange={(e) => handleChange('appliedDate', e.target.value)}
                     className="bg-secondary/50"
+                    {...register('appliedDate')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -190,9 +238,8 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                   <Input
                     id="interviewDate"
                     type="date"
-                    value={formData.interviewDate || ''}
-                    onChange={(e) => handleChange('interviewDate', e.target.value)}
                     className="bg-secondary/50"
+                    {...register('interviewDate')}
                   />
                 </div>
               </div>
@@ -202,56 +249,58 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location || ''}
-                    onChange={(e) => handleChange('location', e.target.value)}
-                    placeholder="City, Country"
-                  />
+                  <Input id="location" placeholder="City, Country" {...register('location')} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jobType">Job Type</Label>
-                  <Select value={formData.jobType || ''} onValueChange={(v: JobType) => handleChange('jobType', v)}>
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent className="glass border-border">
-                      <SelectItem value="remote">Remote</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
-                      <SelectItem value="onsite">Onsite</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="jobType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || ''}
+                        onValueChange={(v) => field.onChange(v as JobType)}
+                      >
+                        <SelectTrigger className="bg-secondary/50">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent className="glass border-border">
+                          <SelectItem value="remote">Remote</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                          <SelectItem value="onsite">Onsite</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="salary">Salary</Label>
-                  <Input
-                    id="salary"
-                    value={formData.salary || ''}
-                    onChange={(e) => handleChange('salary', e.target.value)}
-                    placeholder="e.g. $80k - $120k"
-                  />
+                  <Input id="salary" placeholder="e.g. $80k - $120k" {...register('salary')} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jobUrl">Job URL</Label>
-                  <Input
-                    id="jobUrl"
-                    type="url"
-                    value={formData.jobUrl || ''}
-                    onChange={(e) => handleChange('jobUrl', e.target.value)}
-                    placeholder="https://..."
-                  />
+                  <Input id="jobUrl" type="url" placeholder="https://..." {...register('jobUrl')} />
+                  {errors.jobUrl && (
+                    <p className="text-xs text-destructive">{errors.jobUrl.message}</p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Tags</Label>
-                <TagInput
-                  value={formData.tags || []}
-                  onChange={(tags) => handleChange('tags', tags)}
-                  placeholder="Type and press Enter"
+                <Controller
+                  name="tags"
+                  control={control}
+                  render={({ field }) => (
+                    <TagInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Type and press Enter"
+                    />
+                  )}
                 />
               </div>
             </TabsContent>
@@ -261,9 +310,8 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                 <Label htmlFor="contactName">Contact Name</Label>
                 <Input
                   id="contactName"
-                  value={formData.contactName || ''}
-                  onChange={(e) => handleChange('contactName', e.target.value)}
                   placeholder="Recruiter or hiring manager"
+                  {...register('contactName')}
                 />
               </div>
               <div className="space-y-2">
@@ -271,10 +319,12 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                 <Input
                   id="contactEmail"
                   type="email"
-                  value={formData.contactEmail || ''}
-                  onChange={(e) => handleChange('contactEmail', e.target.value)}
                   placeholder="recruiter@company.com"
+                  {...register('contactEmail')}
                 />
+                {errors.contactEmail && (
+                  <p className="text-xs text-destructive">{errors.contactEmail.message}</p>
+                )}
               </div>
             </TabsContent>
 
@@ -283,10 +333,9 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                 <Label htmlFor="description">Description / Notes</Label>
                 <Textarea
                   id="description"
-                  value={formData.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Job description, requirements, notes..."
                   className="min-h-[150px] bg-secondary/50"
+                  {...register('description')}
                 />
               </div>
             </TabsContent>
@@ -308,8 +357,10 @@ export const JobModal = ({ isOpen, onClose, onSubmit, job, isLoading }: JobModal
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Saving...
                 </>
+              ) : job ? (
+                'Update Job'
               ) : (
-                job ? 'Update Job' : 'Add Job'
+                'Add Job'
               )}
             </Button>
           </div>

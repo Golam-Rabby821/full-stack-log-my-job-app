@@ -7,12 +7,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Filter, X, MapPin, Briefcase, AlertCircle, ArrowUpDown } from 'lucide-react';
+import { Filter, X, MapPin, AlertCircle, ArrowUpDown } from 'lucide-react';
 
 interface AdvancedFiltersProps {
   filters: JobFilters;
   onChange: (filters: JobFilters) => void;
   onReset: () => void;
+  hideStatusFilter?: boolean;
 }
 
 const statusOptions: { value: JobStatus | 'all'; label: string }[] = [
@@ -47,32 +48,42 @@ const sortOptions: { value: string; label: string }[] = [
   { value: 'priority', label: 'Priority Low-High' },
 ];
 
-export const AdvancedFilters = ({ filters, onChange, onReset }: AdvancedFiltersProps) => {
-  const hasActiveFilters = 
-    (filters.status && filters.status !== 'all') ||
+export const AdvancedFilters = ({
+  filters,
+  onChange,
+  onReset,
+  hideStatusFilter = false,
+}: AdvancedFiltersProps) => {
+  const hasActiveFilters =
+    (!hideStatusFilter && filters.status && filters.status !== 'all') ||
     (filters.jobType && filters.jobType !== 'all') ||
     (filters.priority && filters.priority !== 'all') ||
-    filters.sort;
+    Boolean(filters.search) ||
+    Boolean(filters.sort && filters.sort !== '-createdAt');
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Select 
-        value={filters.status || 'all'} 
-        onValueChange={(v) => onChange({ ...filters, status: v as JobStatus | 'all', page: 1 })}
-      >
-        <SelectTrigger className="w-[130px] glass h-9 text-sm">
-          <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="bg-card border-border">
-          {statusOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {!hideStatusFilter && (
+        <Select
+          value={filters.status || 'all'}
+          onValueChange={(v) => onChange({ ...filters, status: v as JobStatus | 'all', page: 1 })}
+        >
+          <SelectTrigger className="w-[130px] glass h-9 text-sm">
+            <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            {statusOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
-      <Select 
-        value={filters.jobType || 'all'} 
+      <Select
+        value={filters.jobType || 'all'}
         onValueChange={(v) => onChange({ ...filters, jobType: v as JobType | 'all', page: 1 })}
       >
         <SelectTrigger className="w-[120px] glass h-9 text-sm">
@@ -81,13 +92,15 @@ export const AdvancedFilters = ({ filters, onChange, onReset }: AdvancedFiltersP
         </SelectTrigger>
         <SelectContent className="bg-card border-border">
           {jobTypeOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select 
-        value={filters.priority || 'all'} 
+      <Select
+        value={filters.priority || 'all'}
         onValueChange={(v) => onChange({ ...filters, priority: v as Priority | 'all', page: 1 })}
       >
         <SelectTrigger className="w-[130px] glass h-9 text-sm">
@@ -96,13 +109,15 @@ export const AdvancedFilters = ({ filters, onChange, onReset }: AdvancedFiltersP
         </SelectTrigger>
         <SelectContent className="bg-card border-border">
           {priorityOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select 
-        value={filters.sort || '-createdAt'} 
+      <Select
+        value={filters.sort || '-createdAt'}
         onValueChange={(v) => onChange({ ...filters, sort: v })}
       >
         <SelectTrigger className="w-[150px] glass h-9 text-sm">
@@ -111,13 +126,20 @@ export const AdvancedFilters = ({ filters, onChange, onReset }: AdvancedFiltersP
         </SelectTrigger>
         <SelectContent className="bg-card border-border">
           {sortOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={onReset} className="h-9 text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReset}
+          className="h-9 text-muted-foreground hover:text-foreground"
+        >
           <X className="w-4 h-4 mr-1" />
           Reset
         </Button>

@@ -75,14 +75,17 @@ export interface CreateJobData {
   contactEmail?: string;
 }
 
-export interface UpdateJobData extends Partial<CreateJobData> {}
+export type UpdateJobData = Partial<CreateJobData>;
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  isDemo?: boolean;
+}
 
 export interface AuthResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  user: UserProfile;
   token: string;
 }
 
@@ -95,12 +98,6 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
 }
 
 export interface UpdateProfileData {
