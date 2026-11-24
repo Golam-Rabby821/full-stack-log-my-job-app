@@ -294,7 +294,7 @@ const JobDetails = () => {
                     </div>
                   </div>
                 )}
-                {job.jobUrl && (
+                {job.jobUrl && /^https?:\/\//i.test(job.jobUrl) && (
                   <div className="flex items-start gap-3 sm:col-span-2">
                     <ExternalLink className="w-4 h-4 text-muted-foreground mt-0.5" />
                     <div className="min-w-0">
